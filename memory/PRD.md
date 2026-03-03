@@ -1,7 +1,7 @@
 # Elevideo - PRD (Product Requirements Document)
 
-## Fecha de Creación
-Enero 2026
+## Fecha de Última Actualización
+Marzo 2026
 
 ## Problema Original
 Las vistas de pantalla horizontal a vertical pierden parte de la imagen y no se pueden generar shorts automáticamente en vertical. Startups, PyMEs y emprendedores necesitan presencia constante en redes sociales (TikTok, Instagram Reels, YouTube Shorts) para ganar visibilidad, pero no tienen tiempo para editar manualmente.
@@ -13,12 +13,13 @@ Plataforma SaaS que permite a usuarios subir un video horizontal una sola vez y,
 
 ## Arquitectura
 
-### Frontend
+### Frontend (Tecnologías)
 - **Framework**: React 18+ con hooks
 - **Routing**: React Router DOM v7
 - **State Management**: TanStack Query (caching), Context API (auth, theme)
-- **Styling**: Tailwind CSS + shadcn/ui components
+- **Styling**: Tailwind CSS + shadcn/ui + CSS custom con gradientes y glassmorphism
 - **Forms**: React Hook Form + Zod validation
+- **Notificaciones**: Web Notifications API (push del navegador)
 
 ### Backend (API Externa)
 - **API Base**: https://elevideo.onrender.com
@@ -32,51 +33,60 @@ Plataforma SaaS que permite a usuarios subir un video horizontal una sola vez y,
 
 ## Funcionalidades Implementadas
 
-### Autenticación
-- [x] Login con email/contraseña
-- [x] Registro con validación de contraseña compleja
+### ✅ Autenticación
+- [x] Login con email/contraseña (diseño premium)
+- [x] Registro con validación de contraseña compleja + indicadores visuales de fortaleza
 - [x] Recuperación de contraseña (forgot/reset)
 - [x] Verificación de email
 - [x] Protección de rutas (ProtectedRoute)
 
-### Proyectos
-- [x] Lista de proyectos (Dashboard)
-- [x] Crear proyecto
+### ✅ Proyectos
+- [x] Lista de proyectos con cards 3D animadas
+- [x] Crear proyecto con modal elegante
 - [x] Editar proyecto
-- [x] Eliminar proyecto
+- [x] Eliminar proyecto con confirmación
+- [x] Stats de proyectos y videos
 
-### Videos
-- [x] Lista de videos por proyecto
-- [x] Subir video (multipart/form-data)
-- [x] Ver detalles de video
+### ✅ Videos
+- [x] Lista de videos con thumbnails y badges de estado
+- [x] Subir video con drag & drop
+- [x] **VER videos directamente en la página** (modal de preview)
 - [x] Eliminar video
-- [x] Reproducción de video
+- [x] Reproducción de video integrada
 
-### Procesamiento
-- [x] Formulario de procesamiento con modos:
+### ✅ Procesamiento
+- [x] Formulario de procesamiento con 3 modos:
   - VERTICAL: Video completo a 9:16
-  - SHORT_AUTO: Selección automática del mejor segmento
-  - SHORT_MANUAL: Especificar inicio y duración
+  - SHORT_AUTO: IA selecciona el mejor segmento
+  - SHORT_MANUAL: Usuario especifica inicio y duración
 - [x] Opciones de plataforma (TikTok, Instagram, YouTube Shorts)
 - [x] Opciones de calidad (Rápido, Normal, Alta)
 - [x] Modos de fondo (Smart Crop, Blurred, Black)
 - [x] Opciones avanzadas (headroom, smoothing)
-- [x] Lista de jobs con estados
-- [x] Cancelar job
-- [x] Lista de renditions (videos procesados)
+- [x] Lista de jobs con estados y cancelación
+- [x] **Preview de videos procesados (renditions)** en modal
 - [x] Descargar rendition
-- [x] Eliminar rendition
 
-### UX/UI
-- [x] Modo claro/oscuro con toggle
-- [x] Diseño responsive (mobile-first)
+### ✅ Notificaciones Push
+- [x] Solicitud de permisos de notificación
+- [x] **Notificación cuando termina el procesamiento** (completado o error)
+- [x] Indicador visual de notificaciones activadas
+
+### ✅ UX/UI Premium
+- [x] Modo claro/oscuro con toggle en todas las páginas
+- [x] Diseño responsive mobile-first
 - [x] Fuentes: Outfit (headings) + Inter (body)
-- [x] Colores: Monocromático + Electric Blue accent
+- [x] **Gradientes animados** (purple/blue/pink)
+- [x] **Glassmorphism** (backdrop-blur, bordes suaves)
+- [x] **Cards 3D con hover effects**
+- [x] **Animaciones flotantes** en backgrounds
 - [x] Toast notifications (sonner)
-- [x] Loading skeletons
-- [x] Estados vacíos con ilustraciones
+- [x] Loading states y skeletons
+- [x] Empty states con ilustraciones elegantes
+- [x] Indicadores de fortaleza de contraseña
+- [x] Custom scrollbar con gradiente
 
-### Perfil
+### ✅ Perfil
 - [x] Ver información de usuario
 - [x] Editar nombre/apellido
 - [x] Cambiar contraseña
@@ -85,41 +95,43 @@ Plataforma SaaS que permite a usuarios subir un video horizontal una sola vez y,
 ```
 /app/frontend/src/
 ├── api/           # API clients (auth, projects, videos, processing, users)
-├── components/    # Reusable components (Layout, ProtectedRoute, ui/)
-├── context/       # React contexts (AuthContext, ThemeContext)
-├── lib/           # Utilities (cn function)
-└── pages/         # Page components (Login, Register, Dashboard, etc.)
+├── components/    # Layout, ProtectedRoute, VideoPreviewModal, ui/
+├── context/       # AuthContext, ThemeContext
+├── lib/           # utils, notifications
+└── pages/         # Login, Register, Dashboard, Project, Video, Profile, etc.
 ```
+
+## Testing
+- **Testing Agent Iteration 2**: 95% passed
+- Form validation: ✅ 100%
+- Routing: ✅ 100%
+- UI rendering: ✅ 100%
+- Theme toggle: ✅ 100%
+- Responsive design: ✅ 100%
+- CSS animations: ✅ 100%
 
 ## Backlog / Próximas Funcionalidades
 
 ### P0 (Crítico)
-- [ ] Polling mejorado para estado de jobs
-- [ ] Preview de rendition antes de descargar
+- [ ] Integración con credenciales reales de la API
 
 ### P1 (Alta prioridad)
 - [ ] Búsqueda y filtrado de videos
 - [ ] Paginación infinita en listas
-- [ ] Notificaciones push cuando termina el procesamiento
+- [ ] Compartir video a redes sociales directamente
 
 ### P2 (Media prioridad)
-- [ ] Drag & drop para subir videos
 - [ ] Bulk processing (procesar múltiples videos)
-- [ ] Compartir video directamente a redes sociales
 - [ ] Historial de actividad
+- [ ] Analytics de uso
 
 ### P3 (Baja prioridad)
 - [ ] Integración con Google Drive/Dropbox
 - [ ] Templates de procesamiento guardados
-- [ ] Analytics de uso
-
-## Testing
-- Testing Agent: 95% passed
-- Form validation: 100%
-- Routing: 100%
-- UI rendering: 100%
+- [ ] Subtítulos automáticos
 
 ## Notas Técnicas
-- La API externa (elevideo.onrender.com) puede tener latencia inicial debido a cold start
+- La API externa (elevideo.onrender.com) puede tener latencia inicial (cold start)
 - Los tokens JWT tienen expiración limitada
 - El upload de videos tiene límite de 200MB
+- Las notificaciones push requieren permisos del navegador

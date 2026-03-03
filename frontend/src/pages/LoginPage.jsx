@@ -103,6 +103,8 @@ export function LoginPage() {
                     placeholder="tu@email.com"
                     className="h-12 bg-background/50 border-border/50 focus:border-accent"
                     data-testid="login-email-input"
+                    tabIndex={1}
+                    autoFocus
                     {...form.register('email')}
                   />
                   {form.formState.errors.email && (
