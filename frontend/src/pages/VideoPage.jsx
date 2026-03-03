@@ -1,9 +1,11 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { videosApi } from '@/api/videos';
 import { processingApi } from '@/api/processing';
 import { Layout } from '@/components/Layout';
+import { VideoPreviewModal } from '@/components/VideoPreviewModal';
+import { notifyProcessingComplete, requestNotificationPermission } from '@/lib/notifications';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -23,12 +25,16 @@ import {
   Download,
   Trash2,
   Clock,
-  RefreshCw,
   XCircle,
-  CheckCircle,
   Play,
   Film,
   Smartphone,
+  Settings2,
+  Sparkles,
+  Eye,
+  CheckCircle,
+  AlertCircle,
+  RefreshCw,
 } from 'lucide-react';
 import {
   AlertDialog,
@@ -42,37 +48,29 @@ import {
 } from '@/components/ui/alert-dialog';
 
 const platformOptions = [
-  { value: 'tiktok', label: 'TikTok' },
-  { value: 'instagram', label: 'Instagram Reels' },
-  { value: 'youtube_shorts', label: 'YouTube Shorts' },
+  { value: 'tiktok', label: 'TikTok', color: 'text-pink-500' },
+  { value: 'instagram', label: 'Instagram Reels', color: 'text-purple-500' },
+  { value: 'youtube_shorts', label: 'YouTube Shorts', color: 'text-red-500' },
 ];
 
 const qualityOptions = [
-  { value: 'fast', label: 'Rápido' },
-  { value: 'normal', label: 'Normal' },
-  { value: 'high', label: 'Alta calidad' },
+  { value: 'fast', label: 'Rápido', desc: 'Menor calidad, más rápido' },
+  { value: 'normal', label: 'Normal', desc: 'Balance óptimo' },
+  { value: 'high', label: 'Alta calidad', desc: 'Mejor calidad, más lento' },
 ];
 
 const backgroundModeOptions = [
-  { value: 'smart_crop', label: 'Recorte inteligente' },
-  { value: 'blurred', label: 'Fondo difuminado' },
-  { value: 'black', label: 'Barras negras' },
+  { value: 'smart_crop', label: 'Recorte inteligente', desc: 'IA detecta el sujeto principal' },
+  { value: 'blurred', label: 'Fondo difuminado', desc: 'Video original como fondo blur' },
+  { value: 'black', label: 'Barras negras', desc: 'Fondo negro simple' },
 ];
 
-const jobStatusStyles = {
-  pending: 'bg-yellow-50 text-yellow-600 dark:bg-yellow-900/20 dark:text-yellow-400',
-  processing: 'bg-blue-50 text-blue-600 dark:bg-blue-900/20 dark:text-blue-400',
-  completed: 'bg-green-50 text-green-600 dark:bg-green-900/20 dark:text-green-400',
-  failed: 'bg-red-50 text-red-600 dark:bg-red-900/20 dark:text-red-400',
-  cancelled: 'bg-gray-50 text-gray-600 dark:bg-gray-900/20 dark:text-gray-400',
-};
-
-const jobStatusLabels = {
-  pending: 'Pendiente',
-  processing: 'Procesando',
-  completed: 'Completado',
-  failed: 'Error',
-  cancelled: 'Cancelado',
+const jobStatusConfig = {
+  pending: { label: 'En cola', icon: Clock, className: 'bg-yellow-500/10 text-yellow-600 border-yellow-500/20' },
+  processing: { label: 'Procesando', icon: RefreshCw, className: 'bg-blue-500/10 text-blue-600 border-blue-500/20' },
+  completed: { label: 'Completado', icon: CheckCircle, className: 'bg-green-500/10 text-green-600 border-green-500/20' },
+  failed: { label: 'Error', icon: AlertCircle, className: 'bg-red-500/10 text-red-600 border-red-500/20' },
+  cancelled: { label: 'Cancelado', icon: XCircle, className: 'bg-gray-500/10 text-gray-600 border-gray-500/20' },
 };
 
 function formatDuration(ms) {
@@ -86,6 +84,7 @@ function formatDuration(ms) {
 export function VideoPage() {
   const { projectId, videoId } = useParams();
   const queryClient = useQueryClient();
+  const prevJobsRef = useRef([]);
   
   // Processing form state
   const [processingMode, setProcessingMode] = useState('vertical');
@@ -101,6 +100,9 @@ export function VideoPage() {
   
   const [isDeleteRenditionOpen, setIsDeleteRenditionOpen] = useState(false);
   const [selectedRendition, setSelectedRendition] = useState(null);
+  const [isPreviewOpen, setIsPreviewOpen] = useState(false);
+  const [previewVideo, setPreviewVideo] = useState(null);
+  const [previewRendition, setPreviewRendition] = useState(null);
 
   const { data: videoData, isLoading: videoLoading } = useQuery({
     queryKey: ['video', projectId, videoId],
@@ -110,19 +112,44 @@ export function VideoPage() {
   const { data: jobsData, isLoading: jobsLoading } = useQuery({
     queryKey: ['jobs', videoId],
     queryFn: () => processingApi.getJobs(videoId, { page: 0, size: 20 }),
-    refetchInterval: 5000, // Poll every 5 seconds for job updates
+    refetchInterval: 5000,
   });
 
-  const { data: renditionsData, isLoading: renditionsLoading } = useQuery({
+  const { data: renditionsData, isLoading: renditionsLoading, refetch: refetchRenditions } = useQuery({
     queryKey: ['renditions', videoId],
     queryFn: () => processingApi.getRenditions(videoId, { page: 0, size: 20 }),
   });
+
+  // Check for completed jobs and notify
+  useEffect(() => {
+    const jobs = jobsData?.data?.content || jobsData?.content || [];
+    const prevJobs = prevJobsRef.current;
+    
+    jobs.forEach((job) => {
+      const prevJob = prevJobs.find((p) => (p.id || p.jobId) === (job.id || job.jobId));
+      if (prevJob && prevJob.status !== job.status) {
+        if (job.status === 'completed' || job.status === 'failed') {
+          notifyProcessingComplete(videoData?.data?.title || 'Video', job.status);
+          if (job.status === 'completed') {
+            refetchRenditions();
+          }
+        }
+      }
+    });
+    
+    prevJobsRef.current = jobs;
+  }, [jobsData, videoData, refetchRenditions]);
+
+  // Request notification permission on mount
+  useEffect(() => {
+    requestNotificationPermission();
+  }, []);
 
   const processMutation = useMutation({
     mutationFn: (data) => processingApi.processVideo(videoId, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['jobs', videoId] });
-      toast.success('Procesamiento iniciado');
+      toast.success('¡Procesamiento iniciado! Te notificaremos cuando termine.');
     },
     onError: (error) => {
       toast.error(error.response?.data?.message || 'Error al iniciar procesamiento');
@@ -136,7 +163,7 @@ export function VideoPage() {
       toast.success('Job cancelado');
     },
     onError: (error) => {
-      toast.error(error.response?.data?.message || 'Error al cancelar job');
+      toast.error(error.response?.data?.message || 'Error al cancelar');
     },
   });
 
@@ -148,7 +175,7 @@ export function VideoPage() {
       toast.success('Rendición eliminada');
     },
     onError: (error) => {
-      toast.error(error.response?.data?.message || 'Error al eliminar rendición');
+      toast.error(error.response?.data?.message || 'Error al eliminar');
     },
   });
 
@@ -182,6 +209,7 @@ export function VideoPage() {
   const video = videoData?.data || videoData;
   const jobs = jobsData?.data?.content || jobsData?.content || [];
   const renditions = renditionsData?.data?.content || renditionsData?.content || [];
+  const activeJobs = jobs.filter((j) => j.status === 'pending' || j.status === 'processing');
 
   return (
     <Layout>
@@ -190,15 +218,15 @@ export function VideoPage() {
         <div className="space-y-4">
           <Link
             to={`/projects/${projectId}`}
-            className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-accent transition-colors"
+            className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors group"
           >
-            <ArrowLeft className="h-4 w-4" />
+            <ArrowLeft className="h-4 w-4 group-hover:-translate-x-1 transition-transform" />
             Volver al proyecto
           </Link>
           {videoLoading ? (
-            <Skeleton className="h-8 w-64" />
+            <Skeleton className="h-10 w-64" />
           ) : (
-            <h1 className="font-outfit text-3xl font-semibold tracking-tight">
+            <h1 className="font-outfit text-4xl font-bold tracking-tight">
               {video?.title}
             </h1>
           )}
@@ -206,115 +234,173 @@ export function VideoPage() {
 
         {/* Main Content */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Video Player */}
+          {/* Video Player & Results */}
           <div className="lg:col-span-2 space-y-6">
+            {/* Video Player */}
             {videoLoading ? (
-              <Skeleton className="aspect-video w-full rounded-lg" />
+              <Skeleton className="aspect-video w-full rounded-2xl" />
             ) : video?.secureUrl ? (
-              <div className="relative aspect-video bg-black rounded-lg overflow-hidden">
+              <div className="relative aspect-video bg-black rounded-2xl overflow-hidden shadow-2xl">
                 <video
                   src={video.secureUrl}
                   controls
                   className="w-full h-full"
                   data-testid="video-player"
+                  poster={video.thumbnailUrl}
                 />
               </div>
             ) : (
-              <div className="aspect-video bg-muted rounded-lg flex items-center justify-center">
-                <Film className="h-16 w-16 text-muted-foreground" />
+              <div className="aspect-video bg-gradient-to-br from-slate-800 to-slate-900 rounded-2xl flex items-center justify-center">
+                <Film className="h-20 w-20 text-white/20" />
               </div>
             )}
 
             {/* Video Info */}
             {video && (
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-                <div className="p-4 rounded-lg bg-muted">
-                  <p className="text-sm text-muted-foreground">Duración</p>
-                  <p className="font-medium">{formatDuration(video.durationInMillis)}</p>
-                </div>
-                <div className="p-4 rounded-lg bg-muted">
-                  <p className="text-sm text-muted-foreground">Resolución</p>
-                  <p className="font-medium">{video.width}x{video.height}</p>
-                </div>
-                <div className="p-4 rounded-lg bg-muted">
-                  <p className="text-sm text-muted-foreground">Formato</p>
-                  <p className="font-medium uppercase">{video.format || 'MP4'}</p>
-                </div>
-                <div className="p-4 rounded-lg bg-muted">
-                  <p className="text-sm text-muted-foreground">Estado</p>
-                  <p className="font-medium">{video.status}</p>
-                </div>
+                {[
+                  { label: 'Duración', value: formatDuration(video.durationInMillis) },
+                  { label: 'Resolución', value: `${video.width}×${video.height}` },
+                  { label: 'Formato', value: (video.format || 'MP4').toUpperCase() },
+                  { label: 'Estado', value: video.status, isStatus: true },
+                ].map((item) => (
+                  <div key={item.label} className="stat-card rounded-xl p-4">
+                    <p className="text-sm text-muted-foreground">{item.label}</p>
+                    <p className={`font-semibold font-outfit ${item.isStatus ? 'text-green-500' : ''}`}>
+                      {item.value}
+                    </p>
+                  </div>
+                ))}
               </div>
             )}
 
-            {/* Tabs: Jobs & Renditions */}
-            <Tabs defaultValue="renditions" className="space-y-4">
-              <TabsList>
-                <TabsTrigger value="renditions" data-testid="renditions-tab">
+            {/* Tabs */}
+            <Tabs defaultValue="renditions" className="space-y-6">
+              <TabsList className="w-full grid grid-cols-2 h-12 p-1 bg-muted/50">
+                <TabsTrigger value="renditions" className="data-[state=active]:bg-background" data-testid="renditions-tab">
                   <Smartphone className="mr-2 h-4 w-4" />
                   Videos procesados ({renditions.length})
                 </TabsTrigger>
-                <TabsTrigger value="jobs" data-testid="jobs-tab">
+                <TabsTrigger value="jobs" className="data-[state=active]:bg-background" data-testid="jobs-tab">
                   <Clock className="mr-2 h-4 w-4" />
-                  Jobs ({jobs.length})
+                  Jobs {activeJobs.length > 0 && `(${activeJobs.length} activos)`}
                 </TabsTrigger>
               </TabsList>
 
               {/* Renditions Tab */}
               <TabsContent value="renditions" className="space-y-4">
                 {renditionsLoading ? (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    {[...Array(2)].map((_, i) => (
-                      <Skeleton key={i} className="h-40" />
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+                    {[...Array(3)].map((_, i) => (
+                      <Skeleton key={i} className="aspect-[9/16] rounded-xl" />
                     ))}
                   </div>
                 ) : renditions.length === 0 ? (
-                  <Card className="text-center py-8">
-                    <CardContent>
-                      <Smartphone className="h-10 w-10 mx-auto text-muted-foreground mb-4" />
-                      <p className="text-muted-foreground">No hay videos procesados aún</p>
+                  <Card className="text-center py-12 border-dashed border-2">
+                    <CardContent className="space-y-4">
+                      <div className="w-16 h-16 mx-auto rounded-full bg-purple-500/10 flex items-center justify-center">
+                        <Smartphone className="h-8 w-8 text-purple-500" />
+                      </div>
+                      <div>
+                        <h3 className="font-outfit font-semibold text-lg">No hay videos procesados</h3>
+                        <p className="text-muted-foreground text-sm">
+                          Usa el panel de la derecha para convertir tu video
+                        </p>
+                      </div>
                     </CardContent>
                   </Card>
                 ) : (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
                     {renditions.map((rendition) => (
-                      <Card key={rendition.id} data-testid={`rendition-${rendition.id}`}>
-                        <div className="relative aspect-[9/16] bg-muted rounded-t-lg overflow-hidden max-h-40">
+                      <Card 
+                        key={rendition.id} 
+                        className="card-3d overflow-hidden border-border/50 group"
+                        data-testid={`rendition-${rendition.id}`}
+                      >
+                        <div className="relative aspect-[9/16] bg-gradient-to-br from-slate-800 to-slate-900">
                           {rendition.thumbnailUrl ? (
                             <img
                               src={rendition.thumbnailUrl}
                               alt="Thumbnail"
                               className="w-full h-full object-cover"
                             />
+                          ) : rendition.outputUrl || rendition.previewUrl ? (
+                            <video
+                              src={rendition.outputUrl || rendition.previewUrl}
+                              className="w-full h-full object-cover"
+                              muted
+                              preload="metadata"
+                            />
                           ) : (
                             <div className="w-full h-full flex items-center justify-center">
-                              <Smartphone className="h-8 w-8 text-muted-foreground" />
+                              <Smartphone className="h-12 w-12 text-white/20" />
                             </div>
                           )}
+                          
+                          {/* Overlay */}
+                          <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                          
+                          {/* Play button */}
+                          <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all">
+                            <Button
+                              size="icon"
+                              className="w-12 h-12 rounded-full bg-white/90 hover:bg-white text-black"
+                              onClick={() => {
+                                setPreviewVideo(video);
+                                setPreviewRendition(rendition);
+                                setIsPreviewOpen(true);
+                              }}
+                            >
+                              <Play className="h-5 w-5 ml-0.5" fill="currentColor" />
+                            </Button>
+                          </div>
+
+                          {/* Platform badge */}
+                          <div className="absolute top-2 left-2">
+                            <Badge className="bg-black/50 text-white border-0 backdrop-blur-sm">
+                              {rendition.platform}
+                            </Badge>
+                          </div>
                         </div>
-                        <CardContent className="p-4 space-y-3">
+                        <CardContent className="p-3 space-y-2">
                           <div className="flex items-center justify-between">
-                            <Badge variant="outline">{rendition.platform}</Badge>
-                            <Badge variant="outline">{rendition.processingMode}</Badge>
+                            <Badge variant="outline" className="text-xs">
+                              {rendition.processingMode}
+                            </Badge>
+                            <span className="text-xs text-muted-foreground">
+                              {rendition.quality || 'Normal'}
+                            </span>
                           </div>
                           <div className="flex gap-2">
+                            <Button
+                              size="sm"
+                              className="flex-1 bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700"
+                              onClick={() => {
+                                setPreviewVideo(video);
+                                setPreviewRendition(rendition);
+                                setIsPreviewOpen(true);
+                              }}
+                            >
+                              <Eye className="h-3 w-3 mr-1" />
+                              Ver
+                            </Button>
                             {rendition.outputUrl && (
-                              <Button asChild size="sm" className="flex-1 bg-accent hover:bg-accent/90">
+                              <Button asChild size="sm" variant="outline">
                                 <a href={rendition.outputUrl} download target="_blank" rel="noopener noreferrer">
-                                  <Download className="mr-2 h-4 w-4" />
-                                  Descargar
+                                  <Download className="h-3 w-3" />
                                 </a>
                               </Button>
                             )}
                             <Button
-                              variant="outline"
                               size="sm"
+                              variant="outline"
                               onClick={() => {
                                 setSelectedRendition(rendition);
                                 setIsDeleteRenditionOpen(true);
                               }}
+                              className="text-destructive hover:text-destructive"
                             >
-                              <Trash2 className="h-4 w-4" />
+                              <Trash2 className="h-3 w-3" />
                             </Button>
                           </div>
                         </CardContent>
@@ -329,53 +415,71 @@ export function VideoPage() {
                 {jobsLoading ? (
                   <div className="space-y-4">
                     {[...Array(3)].map((_, i) => (
-                      <Skeleton key={i} className="h-20" />
+                      <Skeleton key={i} className="h-20 rounded-xl" />
                     ))}
                   </div>
                 ) : jobs.length === 0 ? (
-                  <Card className="text-center py-8">
-                    <CardContent>
-                      <Clock className="h-10 w-10 mx-auto text-muted-foreground mb-4" />
-                      <p className="text-muted-foreground">No hay jobs de procesamiento</p>
+                  <Card className="text-center py-12 border-dashed border-2">
+                    <CardContent className="space-y-4">
+                      <div className="w-16 h-16 mx-auto rounded-full bg-blue-500/10 flex items-center justify-center">
+                        <Clock className="h-8 w-8 text-blue-500" />
+                      </div>
+                      <div>
+                        <h3 className="font-outfit font-semibold text-lg">No hay jobs</h3>
+                        <p className="text-muted-foreground text-sm">
+                          Los jobs aparecerán aquí cuando proceses un video
+                        </p>
+                      </div>
                     </CardContent>
                   </Card>
                 ) : (
-                  <div className="space-y-4">
-                    {jobs.map((job) => (
-                      <Card key={job.id || job.jobId} data-testid={`job-${job.id || job.jobId}`}>
-                        <CardContent className="p-4">
-                          <div className="flex items-center justify-between">
-                            <div className="space-y-1">
-                              <div className="flex items-center gap-2">
-                                <Badge className={jobStatusStyles[job.status?.toLowerCase()] || jobStatusStyles.pending}>
-                                  {jobStatusLabels[job.status?.toLowerCase()] || job.status}
-                                </Badge>
-                                <span className="text-sm text-muted-foreground">
-                                  {job.processingMode}
-                                </span>
+                  <div className="space-y-3">
+                    {jobs.map((job) => {
+                      const status = jobStatusConfig[job.status?.toLowerCase()] || jobStatusConfig.pending;
+                      const StatusIcon = status.icon;
+                      
+                      return (
+                        <Card key={job.id || job.jobId} className="border-border/50" data-testid={`job-${job.id || job.jobId}`}>
+                          <CardContent className="p-4">
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center gap-4">
+                                <div className={`p-2 rounded-lg ${status.className}`}>
+                                  <StatusIcon className={`h-5 w-5 ${job.status === 'processing' ? 'animate-spin' : ''}`} />
+                                </div>
+                                <div>
+                                  <div className="flex items-center gap-2">
+                                    <Badge className={`${status.className} border font-medium`}>
+                                      {status.label}
+                                    </Badge>
+                                    <span className="text-sm font-medium">
+                                      {job.processingMode}
+                                    </span>
+                                  </div>
+                                  <p className="text-xs text-muted-foreground mt-1">
+                                    ID: {(job.id || job.jobId).slice(0, 8)}...
+                                  </p>
+                                </div>
                               </div>
-                              <p className="text-xs text-muted-foreground">
-                                ID: {job.id || job.jobId}
-                              </p>
+                              {(job.status === 'pending' || job.status === 'processing') && (
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => cancelJobMutation.mutate(job.id || job.jobId)}
+                                  disabled={cancelJobMutation.isPending}
+                                  className="text-destructive hover:text-destructive"
+                                >
+                                  <XCircle className="mr-2 h-4 w-4" />
+                                  Cancelar
+                                </Button>
+                              )}
                             </div>
-                            {(job.status === 'pending' || job.status === 'processing') && (
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => cancelJobMutation.mutate(job.id || job.jobId)}
-                                disabled={cancelJobMutation.isPending}
-                              >
-                                <XCircle className="mr-2 h-4 w-4" />
-                                Cancelar
-                              </Button>
+                            {job.status === 'processing' && (
+                              <Progress value={job.progress || 50} className="mt-4 h-2" />
                             )}
-                          </div>
-                          {job.status === 'processing' && (
-                            <Progress value={job.progress || 50} className="mt-4" />
-                          )}
-                        </CardContent>
-                      </Card>
-                    ))}
+                          </CardContent>
+                        </Card>
+                      );
+                    })}
                   </div>
                 )}
               </TabsContent>
@@ -384,43 +488,56 @@ export function VideoPage() {
 
           {/* Processing Panel */}
           <div className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle className="font-outfit flex items-center gap-2">
-                  <Wand2 className="h-5 w-5 text-accent" />
+            <Card className="border-border/50 bg-card/50 backdrop-blur-sm sticky top-24">
+              <CardHeader className="pb-4">
+                <CardTitle className="font-outfit flex items-center gap-2 text-xl">
+                  <div className="p-2 rounded-lg bg-gradient-to-br from-blue-500/10 to-purple-500/10">
+                    <Wand2 className="h-5 w-5 text-purple-500" />
+                  </div>
                   Procesar video
                 </CardTitle>
                 <CardDescription>
-                  Convierte tu video a formato vertical para redes sociales
+                  Convierte a formato vertical 9:16 para redes sociales
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
                 {/* Processing Mode */}
-                <div className="space-y-2">
-                  <Label>Modo de procesamiento</Label>
-                  <Select value={processingMode} onValueChange={setProcessingMode}>
-                    <SelectTrigger data-testid="processing-mode-select">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="vertical">Video completo vertical</SelectItem>
-                      <SelectItem value="short_auto">Short automático</SelectItem>
-                      <SelectItem value="short_manual">Short manual</SelectItem>
-                    </SelectContent>
-                  </Select>
+                <div className="space-y-3">
+                  <Label className="text-sm font-medium">Modo de procesamiento</Label>
+                  <div className="grid gap-2">
+                    {[
+                      { value: 'vertical', label: 'Video completo', desc: 'Convierte todo el video' },
+                      { value: 'short_auto', label: 'Short automático', desc: 'IA selecciona el mejor momento' },
+                      { value: 'short_manual', label: 'Short manual', desc: 'Tú eliges inicio y duración' },
+                    ].map((mode) => (
+                      <button
+                        key={mode.value}
+                        type="button"
+                        onClick={() => setProcessingMode(mode.value)}
+                        className={`w-full p-3 rounded-lg border text-left transition-all ${
+                          processingMode === mode.value
+                            ? 'border-purple-500 bg-purple-500/10'
+                            : 'border-border hover:border-purple-500/50'
+                        }`}
+                      >
+                        <p className="font-medium text-sm">{mode.label}</p>
+                        <p className="text-xs text-muted-foreground">{mode.desc}</p>
+                      </button>
+                    ))}
+                  </div>
                 </div>
 
                 {/* Platform */}
                 <div className="space-y-2">
-                  <Label>Plataforma</Label>
+                  <Label>Plataforma destino</Label>
                   <Select value={platform} onValueChange={setPlatform}>
-                    <SelectTrigger data-testid="platform-select">
+                    <SelectTrigger className="h-11" data-testid="platform-select">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
                       {platformOptions.map((opt) => (
                         <SelectItem key={opt.value} value={opt.value}>
-                          {opt.label}
+                          <span className={opt.color}>{opt.label}</span>
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -431,7 +548,7 @@ export function VideoPage() {
                 <div className="space-y-2">
                   <Label>Calidad</Label>
                   <Select value={quality} onValueChange={setQuality}>
-                    <SelectTrigger data-testid="quality-select">
+                    <SelectTrigger className="h-11" data-testid="quality-select">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -448,7 +565,7 @@ export function VideoPage() {
                 <div className="space-y-2">
                   <Label>Modo de fondo</Label>
                   <Select value={backgroundMode} onValueChange={setBackgroundMode}>
-                    <SelectTrigger data-testid="background-mode-select">
+                    <SelectTrigger className="h-11" data-testid="background-mode-select">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -463,14 +580,18 @@ export function VideoPage() {
 
                 {/* Short Auto Duration */}
                 {processingMode === 'short_auto' && (
-                  <div className="space-y-3">
-                    <Label>Duración del short: {shortAutoDuration}s</Label>
+                  <div className="space-y-3 p-4 rounded-lg bg-muted/50">
+                    <div className="flex justify-between">
+                      <Label>Duración del short</Label>
+                      <span className="text-sm font-medium text-purple-500">{shortAutoDuration}s</span>
+                    </div>
                     <Slider
                       value={[shortAutoDuration]}
                       onValueChange={([v]) => setShortAutoDuration(v)}
                       min={5}
                       max={60}
                       step={5}
+                      className="py-2"
                       data-testid="short-duration-slider"
                     />
                   </div>
@@ -478,7 +599,7 @@ export function VideoPage() {
 
                 {/* Short Manual Options */}
                 {processingMode === 'short_manual' && (
-                  <div className="space-y-4">
+                  <div className="space-y-4 p-4 rounded-lg bg-muted/50">
                     <div className="space-y-2">
                       <Label>Tiempo de inicio (segundos)</Label>
                       <Input
@@ -486,11 +607,15 @@ export function VideoPage() {
                         value={shortStartTime}
                         onChange={(e) => setShortStartTime(Number(e.target.value))}
                         min={0}
+                        className="h-11"
                         data-testid="short-start-time-input"
                       />
                     </div>
                     <div className="space-y-3">
-                      <Label>Duración: {shortDuration}s</Label>
+                      <div className="flex justify-between">
+                        <Label>Duración</Label>
+                        <span className="text-sm font-medium text-purple-500">{shortDuration}s</span>
+                      </div>
                       <Slider
                         value={[shortDuration]}
                         onValueChange={([v]) => setShortDuration(v)}
@@ -504,8 +629,11 @@ export function VideoPage() {
                 )}
 
                 {/* Advanced Options Toggle */}
-                <div className="flex items-center justify-between">
-                  <Label>Opciones avanzadas</Label>
+                <div className="flex items-center justify-between p-3 rounded-lg bg-muted/50">
+                  <div className="flex items-center gap-2">
+                    <Settings2 className="h-4 w-4 text-muted-foreground" />
+                    <Label className="cursor-pointer">Opciones avanzadas</Label>
+                  </div>
                   <Switch
                     checked={showAdvanced}
                     onCheckedChange={setShowAdvanced}
@@ -515,9 +643,12 @@ export function VideoPage() {
 
                 {/* Advanced Options */}
                 {showAdvanced && (
-                  <div className="space-y-4 p-4 rounded-lg bg-muted">
+                  <div className="space-y-4 p-4 rounded-lg border border-dashed">
                     <div className="space-y-3">
-                      <Label>Espacio sobre cabeza: {(headroomRatio * 100).toFixed(0)}%</Label>
+                      <div className="flex justify-between">
+                        <Label>Espacio superior</Label>
+                        <span className="text-sm">{(headroomRatio * 100).toFixed(0)}%</span>
+                      </div>
                       <Slider
                         value={[headroomRatio]}
                         onValueChange={([v]) => setHeadroomRatio(v)}
@@ -527,7 +658,10 @@ export function VideoPage() {
                       />
                     </div>
                     <div className="space-y-3">
-                      <Label>Suavizado: {(smoothingStrength * 100).toFixed(0)}%</Label>
+                      <div className="flex justify-between">
+                        <Label>Suavizado de cámara</Label>
+                        <span className="text-sm">{(smoothingStrength * 100).toFixed(0)}%</span>
+                      </div>
                       <Slider
                         value={[smoothingStrength]}
                         onValueChange={([v]) => setSmoothingStrength(v)}
@@ -541,28 +675,39 @@ export function VideoPage() {
 
                 {/* Process Button */}
                 <Button
-                  className="w-full bg-accent hover:bg-accent/90"
+                  className="w-full h-12 bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 shadow-lg shadow-purple-500/25 hover:shadow-purple-500/40 transition-all text-base font-medium"
                   onClick={handleProcess}
                   disabled={processMutation.isPending}
                   data-testid="process-video-button"
                 >
                   {processMutation.isPending ? (
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    <Loader2 className="mr-2 h-5 w-5 animate-spin" />
                   ) : (
-                    <Wand2 className="mr-2 h-4 w-4" />
+                    <Sparkles className="mr-2 h-5 w-5" />
                   )}
-                  Procesar video
+                  Convertir a vertical
                 </Button>
               </CardContent>
             </Card>
           </div>
         </div>
 
+        {/* Video Preview Modal */}
+        <VideoPreviewModal
+          isOpen={isPreviewOpen}
+          onClose={() => {
+            setIsPreviewOpen(false);
+            setPreviewRendition(null);
+          }}
+          video={previewVideo}
+          rendition={previewRendition}
+        />
+
         {/* Delete Rendition Alert */}
         <AlertDialog open={isDeleteRenditionOpen} onOpenChange={setIsDeleteRenditionOpen}>
           <AlertDialogContent>
             <AlertDialogHeader>
-              <AlertDialogTitle>¿Eliminar rendición?</AlertDialogTitle>
+              <AlertDialogTitle>¿Eliminar video procesado?</AlertDialogTitle>
               <AlertDialogDescription>
                 Esta acción no se puede deshacer.
               </AlertDialogDescription>

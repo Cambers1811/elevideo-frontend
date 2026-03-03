@@ -6,11 +6,12 @@ import { Layout } from '@/components/Layout';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Skeleton } from '@/components/ui/skeleton';
 import { toast } from 'sonner';
-import { Plus, Folder, Film, MoreVertical, Pencil, Trash2, Loader2 } from 'lucide-react';
+import { Plus, Folder, Film, MoreVertical, Pencil, Trash2, Loader2, Sparkles, ArrowRight, FolderOpen } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -49,7 +50,7 @@ export function DashboardPage() {
       setIsCreateOpen(false);
       setProjectName('');
       setProjectDescription('');
-      toast.success('Proyecto creado');
+      toast.success('¡Proyecto creado exitosamente!');
     },
     onError: (error) => {
       toast.error(error.response?.data?.message || 'Error al crear proyecto');
@@ -65,7 +66,7 @@ export function DashboardPage() {
       toast.success('Proyecto actualizado');
     },
     onError: (error) => {
-      toast.error(error.response?.data?.message || 'Error al actualizar proyecto');
+      toast.error(error.response?.data?.message || 'Error al actualizar');
     },
   });
 
@@ -78,7 +79,7 @@ export function DashboardPage() {
       toast.success('Proyecto eliminado');
     },
     onError: (error) => {
-      toast.error(error.response?.data?.message || 'Error al eliminar proyecto');
+      toast.error(error.response?.data?.message || 'Error al eliminar');
     },
   });
 
@@ -113,53 +114,69 @@ export function DashboardPage() {
     <Layout>
       <div className="space-y-8" data-testid="dashboard-page">
         {/* Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <div>
-            <h1 className="font-outfit text-3xl font-semibold tracking-tight">Mis Proyectos</h1>
-            <p className="text-muted-foreground mt-1">Organiza tus videos por proyectos</p>
+        <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-6">
+          <div className="space-y-1">
+            <h1 className="font-outfit text-4xl font-bold tracking-tight">
+              Mis <span className="gradient-text">Proyectos</span>
+            </h1>
+            <p className="text-muted-foreground text-lg">
+              Organiza y convierte tus videos a formato vertical
+            </p>
           </div>
           <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
             <DialogTrigger asChild>
-              <Button className="bg-accent hover:bg-accent/90" data-testid="create-project-button">
-                <Plus className="mr-2 h-4 w-4" />
+              <Button 
+                size="lg"
+                className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 shadow-lg shadow-purple-500/25 hover:shadow-purple-500/40 transition-all"
+                data-testid="create-project-button"
+              >
+                <Plus className="mr-2 h-5 w-5" />
                 Nuevo proyecto
               </Button>
             </DialogTrigger>
-            <DialogContent>
+            <DialogContent className="sm:max-w-md">
               <form onSubmit={handleCreate}>
                 <DialogHeader>
-                  <DialogTitle className="font-outfit">Crear proyecto</DialogTitle>
+                  <DialogTitle className="font-outfit text-xl">Crear proyecto</DialogTitle>
                   <DialogDescription>
-                    Crea un nuevo proyecto para organizar tus videos
+                    Los proyectos te ayudan a organizar tus videos
                   </DialogDescription>
                 </DialogHeader>
-                <div className="space-y-4 py-4">
+                <div className="space-y-4 py-6">
                   <div className="space-y-2">
-                    <Label htmlFor="name">Nombre</Label>
+                    <Label htmlFor="name">Nombre del proyecto</Label>
                     <Input
                       id="name"
                       value={projectName}
                       onChange={(e) => setProjectName(e.target.value)}
-                      placeholder="Mi proyecto"
+                      placeholder="Ej: Videos de TikTok"
+                      className="h-11"
                       data-testid="project-name-input"
                       required
                     />
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="description">Descripción (opcional)</Label>
-                    <Input
+                    <Textarea
                       id="description"
                       value={projectDescription}
                       onChange={(e) => setProjectDescription(e.target.value)}
-                      placeholder="Descripción del proyecto"
+                      placeholder="Describe tu proyecto..."
+                      className="resize-none"
+                      rows={3}
                       data-testid="project-description-input"
                     />
                   </div>
                 </div>
                 <DialogFooter>
-                  <Button type="submit" className="bg-accent hover:bg-accent/90" disabled={createMutation.isPending} data-testid="create-project-submit">
+                  <Button 
+                    type="submit" 
+                    className="w-full bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700" 
+                    disabled={createMutation.isPending} 
+                    data-testid="create-project-submit"
+                  >
                     {createMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                    Crear
+                    Crear proyecto
                   </Button>
                 </DialogFooter>
               </form>
@@ -167,88 +184,160 @@ export function DashboardPage() {
           </Dialog>
         </div>
 
+        {/* Stats */}
+        {projects.length > 0 && (
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="stat-card rounded-xl p-4 transition-all">
+              <p className="text-3xl font-bold font-outfit">{projects.length}</p>
+              <p className="text-sm text-muted-foreground">Proyectos</p>
+            </div>
+            <div className="stat-card rounded-xl p-4 transition-all">
+              <p className="text-3xl font-bold font-outfit">
+                {projects.reduce((acc, p) => acc + (p.videoCount || 0), 0)}
+              </p>
+              <p className="text-sm text-muted-foreground">Videos totales</p>
+            </div>
+            <div className="stat-card rounded-xl p-4 transition-all">
+              <p className="text-3xl font-bold font-outfit gradient-text">∞</p>
+              <p className="text-sm text-muted-foreground">Conversiones</p>
+            </div>
+            <div className="stat-card rounded-xl p-4 transition-all">
+              <p className="text-3xl font-bold font-outfit text-green-500">Activo</p>
+              <p className="text-sm text-muted-foreground">Estado</p>
+            </div>
+          </div>
+        )}
+
         {/* Projects Grid */}
         {isLoading ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {[...Array(6)].map((_, i) => (
-              <Card key={i}>
+              <Card key={i} className="overflow-hidden">
+                <div className="h-32 bg-gradient-to-br from-muted to-muted/50" />
                 <CardHeader>
                   <Skeleton className="h-5 w-3/4" />
                   <Skeleton className="h-4 w-1/2 mt-2" />
                 </CardHeader>
-                <CardContent>
-                  <Skeleton className="h-4 w-1/3" />
-                </CardContent>
               </Card>
             ))}
           </div>
         ) : error ? (
-          <Card className="text-center py-12">
-            <CardContent>
-              <p className="text-destructive mb-4">Error al cargar proyectos</p>
+          <Card className="text-center py-16 border-destructive/50">
+            <CardContent className="space-y-4">
+              <p className="text-destructive">Error al cargar proyectos</p>
               <Button onClick={() => queryClient.invalidateQueries({ queryKey: ['projects'] })}>
                 Reintentar
               </Button>
             </CardContent>
           </Card>
         ) : projects.length === 0 ? (
-          <Card className="text-center py-16">
-            <CardContent className="space-y-4">
-              <div className="flex justify-center">
-                <div className="p-4 rounded-full bg-muted">
-                  <Folder className="h-12 w-12 text-muted-foreground" />
+          <div className="relative">
+            <div className="absolute inset-0 empty-state-bg rounded-3xl" />
+            <Card className="relative text-center py-20 border-dashed border-2 bg-transparent">
+              <CardContent className="space-y-6">
+                <div className="relative inline-flex">
+                  <div className="absolute inset-0 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full blur-xl opacity-30 animate-pulse" />
+                  <div className="relative p-6 rounded-full bg-gradient-to-br from-blue-500/10 to-purple-500/10 border border-purple-500/20">
+                    <FolderOpen className="h-16 w-16 text-purple-500" />
+                  </div>
                 </div>
-              </div>
-              <h3 className="font-outfit text-xl font-medium">No tienes proyectos</h3>
-              <p className="text-muted-foreground max-w-sm mx-auto">
-                Crea tu primer proyecto para empezar a convertir videos a formato vertical
-              </p>
-              <Button className="bg-accent hover:bg-accent/90" onClick={() => setIsCreateOpen(true)}>
-                <Plus className="mr-2 h-4 w-4" />
-                Crear proyecto
-              </Button>
-            </CardContent>
-          </Card>
+                <div className="space-y-2">
+                  <h3 className="font-outfit text-2xl font-semibold">
+                    Crea tu primer proyecto
+                  </h3>
+                  <p className="text-muted-foreground max-w-sm mx-auto">
+                    Los proyectos te ayudan a organizar tus videos y generar contenido vertical para redes sociales
+                  </p>
+                </div>
+                <Button 
+                  size="lg"
+                  className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 shadow-lg"
+                  onClick={() => setIsCreateOpen(true)}
+                >
+                  <Sparkles className="mr-2 h-5 w-5" />
+                  Crear mi primer proyecto
+                </Button>
+              </CardContent>
+            </Card>
+          </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {projects.map((project) => (
-              <Card key={project.id} className="group hover:border-accent/50 transition-colors" data-testid={`project-card-${project.id}`}>
-                <CardHeader className="flex flex-row items-start justify-between space-y-0">
-                  <Link to={`/projects/${project.id}`} className="flex-1">
-                    <CardTitle className="font-outfit text-lg group-hover:text-accent transition-colors">
-                      {project.name}
+            {projects.map((project, index) => (
+              <Link 
+                key={project.id} 
+                to={`/projects/${project.id}`}
+                className="group"
+              >
+                <Card 
+                  className="card-3d overflow-hidden border-border/50 bg-card/50 backdrop-blur-sm hover:border-purple-500/50"
+                  data-testid={`project-card-${project.id}`}
+                >
+                  {/* Gradient header */}
+                  <div 
+                    className="h-24 bg-gradient-to-br relative overflow-hidden"
+                    style={{
+                      background: `linear-gradient(135deg, 
+                        hsl(${(index * 40) % 360}, 70%, 50%), 
+                        hsl(${(index * 40 + 60) % 360}, 70%, 50%))`
+                    }}
+                  >
+                    <div className="absolute inset-0 bg-black/20" />
+                    <div className="absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-card to-transparent" />
+                    <div className="absolute top-3 right-3">
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild onClick={(e) => e.preventDefault()}>
+                          <Button 
+                            variant="ghost" 
+                            size="icon" 
+                            className="h-8 w-8 bg-black/30 hover:bg-black/50 text-white"
+                            data-testid={`project-menu-${project.id}`}
+                          >
+                            <MoreVertical className="h-4 w-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem onClick={(e) => { e.preventDefault(); openEditDialog(project); }}>
+                            <Pencil className="mr-2 h-4 w-4" />
+                            Editar
+                          </DropdownMenuItem>
+                          <DropdownMenuItem 
+                            onClick={(e) => { e.preventDefault(); openDeleteDialog(project); }} 
+                            className="text-destructive focus:text-destructive"
+                          >
+                            <Trash2 className="mr-2 h-4 w-4" />
+                            Eliminar
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </div>
+                    <div className="absolute -bottom-6 left-4">
+                      <div className="p-3 rounded-xl bg-card border shadow-lg">
+                        <Folder className="h-6 w-6 text-muted-foreground group-hover:text-purple-500 transition-colors" />
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <CardHeader className="pt-10">
+                    <CardTitle className="font-outfit text-lg group-hover:text-purple-500 transition-colors flex items-center justify-between">
+                      <span className="truncate">{project.name}</span>
+                      <ArrowRight className="h-4 w-4 opacity-0 -translate-x-2 group-hover:opacity-100 group-hover:translate-x-0 transition-all" />
                     </CardTitle>
                     {project.description && (
-                      <CardDescription className="mt-1 line-clamp-2">
+                      <CardDescription className="line-clamp-2">
                         {project.description}
                       </CardDescription>
                     )}
-                  </Link>
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" size="icon" className="h-8 w-8" data-testid={`project-menu-${project.id}`}>
-                        <MoreVertical className="h-4 w-4" />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                      <DropdownMenuItem onClick={() => openEditDialog(project)}>
-                        <Pencil className="mr-2 h-4 w-4" />
-                        Editar
-                      </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => openDeleteDialog(project)} className="text-destructive focus:text-destructive">
-                        <Trash2 className="mr-2 h-4 w-4" />
-                        Eliminar
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                </CardHeader>
-                <CardContent>
-                  <Link to={`/projects/${project.id}`} className="flex items-center gap-2 text-sm text-muted-foreground">
-                    <Film className="h-4 w-4" />
-                    <span>{project.videoCount || 0} videos</span>
-                  </Link>
-                </CardContent>
-              </Card>
+                  </CardHeader>
+                  <CardContent className="pt-0">
+                    <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                      <div className="flex items-center gap-1.5">
+                        <Film className="h-4 w-4" />
+                        <span>{project.videoCount || 0} videos</span>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </Link>
             ))}
           </div>
         )}
@@ -273,18 +362,19 @@ export function DashboardPage() {
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="edit-description">Descripción</Label>
-                  <Input
+                  <Textarea
                     id="edit-description"
                     value={projectDescription}
                     onChange={(e) => setProjectDescription(e.target.value)}
                     data-testid="edit-project-description-input"
+                    rows={3}
                   />
                 </div>
               </div>
               <DialogFooter>
-                <Button type="submit" className="bg-accent hover:bg-accent/90" disabled={updateMutation.isPending}>
+                <Button type="submit" className="bg-gradient-to-r from-blue-500 to-purple-600" disabled={updateMutation.isPending}>
                   {updateMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                  Guardar
+                  Guardar cambios
                 </Button>
               </DialogFooter>
             </form>
