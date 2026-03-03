@@ -1,0 +1,136 @@
+{
+  "brand_identity": {
+    "name": "Elevideo",
+    "persona": "The Invisible Editor",
+    "tone": "Efficient, Clean, Professional, Automated",
+    "description": "A SaaS platform that transforms horizontal videos into vertical social media content instantly.",
+    "emotional_archetype": "The Architect (Structured, Reliable, Minimalist)"
+  },
+  "typography": {
+    "headings": {
+      "font_family": "Outfit, sans-serif",
+      "weights": ["500", "600", "700"],
+      "usage": "Use for all page titles, section headers, and modal titles. Tracking tight (-0.02em).",
+      "import_url": "https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&family=Inter:wght@400;500;600&display=swap"
+    },
+    "body": {
+      "font_family": "Inter, sans-serif",
+      "weights": ["400", "500"],
+      "usage": "Use for all paragraphs, labels, inputs, and data tables. Tracking normal."
+    }
+  },
+  "colors": {
+    "palette_strategy": "Monochrome + Electric Blue Accent",
+    "mode_toggle": true,
+    "light_mode": {
+      "background": "#FFFFFF",
+      "foreground": "#0F172A",
+      "card": "#FFFFFF",
+      "border": "#E2E8F0",
+      "muted": "#F8FAFC",
+      "accent": "#2563EB",
+      "accent_foreground": "#FFFFFF"
+    },
+    "dark_mode": {
+      "background": "#020617",
+      "foreground": "#F8FAFC",
+      "card": "#0F172A",
+      "border": "#1E293B",
+      "muted": "#1E293B",
+      "accent": "#3B82F6",
+      "accent_foreground": "#FFFFFF"
+    },
+    "usage_rules": {
+      "primary_action": "Use Accent color for 'Process Video', 'Save', 'Upload' buttons.",
+      "destructive": "Use Red-500 for 'Delete Project' or 'Cancel Job'.",
+      "status_colors": {
+        "pending": "text-yellow-600 bg-yellow-50 dark:text-yellow-400 dark:bg-yellow-900/20",
+        "processing": "text-blue-600 bg-blue-50 dark:text-blue-400 dark:bg-blue-900/20",
+        "completed": "text-green-600 bg-green-50 dark:text-green-400 dark:bg-green-900/20",
+        "failed": "text-red-600 bg-red-50 dark:text-red-400 dark:bg-red-900/20"
+      }
+    }
+  },
+  "layout_strategy": {
+    "mobile_first": true,
+    "container_padding": "p-4 md:p-8 lg:p-12",
+    "grid_system": {
+      "dashboard": "grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6",
+      "video_detail": "grid-cols-1 lg:grid-cols-3 gap-8 (2 cols for video player, 1 col for controls)",
+      "form": "max-w-md mx-auto space-y-6"
+    },
+    "navigation": {
+      "mobile": "Bottom Sheet or Hamburger Menu (Sheet component)",
+      "desktop": "Sidebar or Top Navbar (minimalist, sticky)"
+    }
+  },
+  "components": {
+    "shadcn_customization": {
+      "radius": "rounded-lg",
+      "shadows": "shadow-sm hover:shadow-md transition-shadow duration-200",
+      "inputs": "h-10 bg-background border-input focus:ring-2 focus:ring-accent",
+      "buttons": "font-medium tracking-wide active:scale-95 transition-transform"
+    },
+    "specific_components": {
+      "VideoCard": {
+        "style": "Card component with image aspect-video on top, title and status badge below. Minimalist borders.",
+        "actions": "Dropdown menu for Edit/Delete actions."
+      },
+      "ProjectCard": {
+        "style": "Simple clean card with project title, video count, and last updated date. Hover effect: border-accent/50."
+      },
+      "ProcessingPanel": {
+        "style": "Split view. Left: Video Player. Right: Processing Options (Form).",
+        "feedback": "Show progress bar or spinner when processing."
+      }
+    }
+  },
+  "assets": {
+    "icons": {
+      "library": "lucide-react",
+      "style": "Stroke width 1.5px or 2px. Size 16-20px for UI, 24px for navigation.",
+      "mapping": {
+        "dashboard": "LayoutDashboard",
+        "projects": "Folder",
+        "videos": "Film",
+        "settings": "Settings",
+        "upload": "UploadCloud",
+        "process": "Wand2",
+        "download": "Download",
+        "user": "User",
+        "logout": "LogOut",
+        "moon": "Moon",
+        "sun": "Sun"
+      }
+    },
+    "images": {
+      "dashboard_empty": "https://images.unsplash.com/photo-1688927415965-f0eb108432bd?crop=entropy&cs=srgb&fm=jpg&q=85",
+      "processing_abstract": "https://images.unsplash.com/photo-1676702934911-e12862e260db?crop=entropy&cs=srgb&fm=jpg&q=85",
+      "video_thumbnails": [
+        "https://images.unsplash.com/photo-1763031614927-a1a7a1f33a8f?crop=entropy&cs=srgb&fm=jpg&q=85",
+        "https://images.unsplash.com/photo-1739269039717-270624bd5772?crop=entropy&cs=srgb&fm=jpg&q=85",
+        "https://images.unsplash.com/photo-1602864945399-c7196d30a59d?crop=entropy&cs=srgb&fm=jpg&q=85"
+      ],
+      "user_avatar": "https://images.unsplash.com/photo-1619241805829-34fb64299391?crop=entropy&cs=srgb&fm=jpg&q=85"
+    }
+  },
+  "instructions_to_main_agent": [
+    "Implement the 'Outfit' font for all headings and 'Inter' for body.",
+    "Create a ThemeProvider to handle Light/Dark mode toggling using 'next-themes'.",
+    "Use 'TanStack Query' for all API calls (Projects, Videos, Jobs).",
+    "For the Video Processing Page (/projects/:id/videos/:id), use a split layout on desktop: Video Player (Left) + Processing Form (Right). On mobile, stack them.",
+    "Ensure all forms (Login, Register, Upload) use 'react-hook-form' and 'zod' for validation.",
+    "Use 'sonner' for all success/error notifications (e.g., 'Video processing started').",
+    "Authentication: Store JWT in localStorage or cookies, and use an Axios interceptor to attach it to requests.",
+    "Mobile-First: Always start styling with mobile classes (base) and add 'md:' or 'lg:' for larger screens.",
+    "Do NOT use gradients for backgrounds. Keep it flat and clean.",
+    "Add 'data-testid' to all buttons, inputs, and forms for testing."
+  ],
+  "UNIVERSAL_GUIDELINES": [
+    "Don't make generic centered layouts. Use grids and asymmetry where appropriate.",
+    "Use 2-3x more spacing than typical (e.g., gap-6 instead of gap-2).",
+    "Micro-interactions: Add hover states to all interactive elements.",
+    "Avoid 'AI Slop': Do not use generic AI emojis or standard bootstrap grids.",
+    "Ensure contrast ratios meet WCAG AA standards."
+  ]
+}
