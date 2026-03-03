@@ -186,24 +186,24 @@ export function DashboardPage() {
 
         {/* Stats */}
         {projects.length > 0 && (
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <div className="stat-card rounded-xl p-4 transition-all">
-              <p className="text-3xl font-bold font-outfit">{projects.length}</p>
-              <p className="text-sm text-muted-foreground">Proyectos</p>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
+            <div className="stat-card rounded-xl p-5">
+              <p className="text-3xl font-bold font-outfit text-foreground">{projects.length}</p>
+              <p className="text-sm text-muted-foreground mt-1">Proyectos</p>
             </div>
-            <div className="stat-card rounded-xl p-4 transition-all">
-              <p className="text-3xl font-bold font-outfit">
+            <div className="stat-card rounded-xl p-5">
+              <p className="text-3xl font-bold font-outfit text-foreground">
                 {projects.reduce((acc, p) => acc + (p.videoCount || 0), 0)}
               </p>
-              <p className="text-sm text-muted-foreground">Videos totales</p>
+              <p className="text-sm text-muted-foreground mt-1">Videos totales</p>
             </div>
-            <div className="stat-card rounded-xl p-4 transition-all">
+            <div className="stat-card rounded-xl p-5">
               <p className="text-3xl font-bold font-outfit gradient-text">∞</p>
-              <p className="text-sm text-muted-foreground">Conversiones</p>
+              <p className="text-sm text-muted-foreground mt-1">Conversiones</p>
             </div>
-            <div className="stat-card rounded-xl p-4 transition-all">
-              <p className="text-3xl font-bold font-outfit text-green-500">Activo</p>
-              <p className="text-sm text-muted-foreground">Estado</p>
+            <div className="stat-card rounded-xl p-5">
+              <p className="text-3xl font-bold font-outfit text-emerald-500">Activo</p>
+              <p className="text-sm text-muted-foreground mt-1">Estado</p>
             </div>
           </div>
         )}
@@ -261,29 +261,29 @@ export function DashboardPage() {
             </Card>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 relative">
             {projects.map((project, index) => (
               <Link 
                 key={project.id} 
                 to={`/projects/${project.id}`}
-                className="group"
+                className="group block"
               >
                 <Card 
-                  className="card-3d overflow-hidden border-border/50 bg-card/50 backdrop-blur-sm hover:border-purple-500/50"
+                  className="card-3d overflow-hidden border-border/50 bg-card hover:border-indigo-500/40 dark:bg-card/80"
                   data-testid={`project-card-${project.id}`}
                 >
                   {/* Gradient header */}
                   <div 
-                    className="h-24 bg-gradient-to-br relative overflow-hidden"
+                    className="h-24 relative overflow-hidden"
                     style={{
                       background: `linear-gradient(135deg, 
-                        hsl(${(index * 40) % 360}, 70%, 50%), 
-                        hsl(${(index * 40 + 60) % 360}, 70%, 50%))`
+                        hsl(${220 + (index * 30) % 60}, 70%, ${50 + (index % 3) * 5}%), 
+                        hsl(${260 + (index * 30) % 60}, 70%, ${45 + (index % 3) * 5}%))`
                     }}
                   >
-                    <div className="absolute inset-0 bg-black/20" />
-                    <div className="absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-card to-transparent" />
-                    <div className="absolute top-3 right-3">
+                    <div className="absolute inset-0 bg-black/10" />
+                    <div className="absolute bottom-0 left-0 right-0 h-20 bg-gradient-to-t from-card dark:from-card/95 to-transparent" />
+                    <div className="absolute top-3 right-3 z-10">
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild onClick={(e) => e.preventDefault()}>
                           <Button 
@@ -310,17 +310,17 @@ export function DashboardPage() {
                         </DropdownMenuContent>
                       </DropdownMenu>
                     </div>
-                    <div className="absolute -bottom-6 left-4">
-                      <div className="p-3 rounded-xl bg-card border shadow-lg">
-                        <Folder className="h-6 w-6 text-muted-foreground group-hover:text-purple-500 transition-colors" />
+                    <div className="absolute -bottom-5 left-4">
+                      <div className="p-3 rounded-xl bg-card dark:bg-slate-800 border border-border/50 shadow-lg">
+                        <Folder className="h-6 w-6 text-indigo-500 group-hover:text-purple-500 transition-colors" />
                       </div>
                     </div>
                   </div>
                   
-                  <CardHeader className="pt-10">
-                    <CardTitle className="font-outfit text-lg group-hover:text-purple-500 transition-colors flex items-center justify-between">
+                  <CardHeader className="pt-8">
+                    <CardTitle className="font-outfit text-lg text-foreground group-hover:text-indigo-500 transition-colors flex items-center justify-between">
                       <span className="truncate">{project.name}</span>
-                      <ArrowRight className="h-4 w-4 opacity-0 -translate-x-2 group-hover:opacity-100 group-hover:translate-x-0 transition-all" />
+                      <ArrowRight className="h-4 w-4 opacity-0 -translate-x-2 group-hover:opacity-100 group-hover:translate-x-0 transition-all flex-shrink-0" />
                     </CardTitle>
                     {project.description && (
                       <CardDescription className="line-clamp-2">
