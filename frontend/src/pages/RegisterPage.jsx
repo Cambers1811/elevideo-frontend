@@ -4,12 +4,13 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { authApi } from '@/api/auth';
+import { useTheme } from '@/context/ThemeContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { toast } from 'sonner';
-import { Film, Loader2, Eye, EyeOff } from 'lucide-react';
+import { Film, Loader2, Eye, EyeOff, Moon, Sun } from 'lucide-react';
 
 const passwordRegex = /^(?=.*[A-ZÑ])(?=.*[a-zñ])(?=.*\d)(?=.*[-@#$%^&*.,()_+{}|;:'"<>/!¡¿?])[A-ZÑa-zñ\d-@#$%^&*.,()_+{}|;:'"<>/!¡¿?]{8,}$/;
 
@@ -29,6 +30,7 @@ const registerSchema = z.object({
 export function RegisterPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const { theme, toggleTheme } = useTheme();
   const navigate = useNavigate();
 
   const form = useForm({
@@ -58,7 +60,18 @@ export function RegisterPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background p-4">
+    <div className="min-h-screen flex items-center justify-center bg-background p-4 relative">
+      {/* Theme Toggle */}
+      <Button
+        variant="ghost"
+        size="icon"
+        className="absolute top-4 right-4"
+        onClick={toggleTheme}
+        data-testid="theme-toggle"
+      >
+        {theme === 'light' ? <Moon className="h-5 w-5" /> : <Sun className="h-5 w-5" />}
+      </Button>
+      
       <Card className="w-full max-w-md">
         <CardHeader className="text-center space-y-4">
           <div className="flex justify-center">
