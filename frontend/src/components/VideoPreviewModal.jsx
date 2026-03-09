@@ -80,8 +80,8 @@ export function VideoPreviewModal({ isOpen, onClose, video, rendition }) {
               </div>
             )}
 
-            {/* Phone device frame */}
-            <div className="relative">
+            {/* Phone device frame - 80% size */}
+            <div className="relative scale-[0.8] origin-top">
               {/* Phone outer frame */}
               <div className="relative bg-gradient-to-b from-zinc-700 via-zinc-800 to-zinc-900 rounded-[2.5rem] p-1.5 shadow-2xl shadow-black/60">
                 {/* Subtle shine effect */}

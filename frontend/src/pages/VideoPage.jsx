@@ -35,6 +35,7 @@ import {
   CheckCircle,
   AlertCircle,
   RefreshCw,
+  Scissors,
 } from 'lucide-react';
 import {
   AlertDialog,
@@ -486,104 +487,128 @@ export function VideoPage() {
             </Tabs>
           </div>
 
-          {/* Processing Panel */}
+          {/* Processing Panel - Premium Design */}
           <div className="space-y-6">
-            <Card className="border-border/50 bg-card/50 backdrop-blur-sm sticky top-24">
-              <CardHeader className="pb-4">
-                <CardTitle className="font-outfit flex items-center gap-2 text-xl">
-                  <div className="p-2 rounded-lg bg-gradient-to-br from-blue-500/10 to-purple-500/10">
-                    <Wand2 className="h-5 w-5 text-purple-500" />
+            <Card className="border-0 bg-gradient-to-br from-slate-900 via-purple-950/50 to-slate-900 dark:from-slate-900 dark:via-purple-950/30 dark:to-slate-900 shadow-2xl shadow-purple-500/10 sticky top-24 overflow-hidden">
+              {/* Decorative elements */}
+              <div className="absolute top-0 right-0 w-40 h-40 bg-purple-500/20 rounded-full blur-3xl pointer-events-none" />
+              <div className="absolute bottom-0 left-0 w-32 h-32 bg-blue-500/20 rounded-full blur-3xl pointer-events-none" />
+              
+              <CardHeader className="pb-2 relative">
+                <div className="flex items-center gap-3">
+                  <div className="p-3 rounded-2xl bg-gradient-to-br from-purple-500 to-pink-500 shadow-lg shadow-purple-500/30">
+                    <Wand2 className="h-6 w-6 text-white" />
                   </div>
-                  Procesar video
-                </CardTitle>
-                <CardDescription>
-                  Convierte a formato vertical 9:16 para redes sociales
-                </CardDescription>
+                  <div>
+                    <CardTitle className="font-outfit text-xl text-white">
+                      Procesar video
+                    </CardTitle>
+                    <CardDescription className="text-white/60">
+                      Convierte a formato 9:16
+                    </CardDescription>
+                  </div>
+                </div>
               </CardHeader>
-              <CardContent className="space-y-6">
-                {/* Processing Mode */}
+              
+              <CardContent className="space-y-5 relative">
+                {/* Processing Mode - Visual Cards */}
                 <div className="space-y-3">
-                  <Label className="text-sm font-medium">Modo de procesamiento</Label>
+                  <Label className="text-sm font-medium text-white/80">Modo de conversión</Label>
                   <div className="grid gap-2">
                     {[
-                      { value: 'vertical', label: 'Video completo', desc: 'Convierte todo el video' },
-                      { value: 'short_auto', label: 'Short automático', desc: 'IA selecciona el mejor momento' },
-                      { value: 'short_manual', label: 'Short manual', desc: 'Tú eliges inicio y duración' },
+                      { value: 'vertical', label: 'Video completo', desc: 'Convierte todo el video', icon: '📹' },
+                      { value: 'short_auto', label: 'Short automático', desc: 'IA selecciona lo mejor', icon: '✨' },
+                      { value: 'short_manual', label: 'Short manual', desc: 'Tú eliges el momento', icon: '✂️' },
                     ].map((mode) => (
                       <button
                         key={mode.value}
                         type="button"
                         onClick={() => setProcessingMode(mode.value)}
-                        className={`w-full p-3 rounded-lg border text-left transition-all ${
+                        className={`w-full p-3 rounded-xl text-left transition-all flex items-center gap-3 ${
                           processingMode === mode.value
-                            ? 'border-purple-500 bg-purple-500/10'
-                            : 'border-border hover:border-purple-500/50'
+                            ? 'bg-gradient-to-r from-purple-500/30 to-pink-500/30 border border-purple-400/50 shadow-lg shadow-purple-500/20'
+                            : 'bg-white/5 border border-white/10 hover:bg-white/10 hover:border-white/20'
                         }`}
                       >
-                        <p className="font-medium text-sm">{mode.label}</p>
-                        <p className="text-xs text-muted-foreground">{mode.desc}</p>
+                        <span className="text-2xl">{mode.icon}</span>
+                        <div>
+                          <p className="font-medium text-sm text-white">{mode.label}</p>
+                          <p className="text-xs text-white/50">{mode.desc}</p>
+                        </div>
                       </button>
                     ))}
                   </div>
                 </div>
 
-                {/* Platform */}
-                <div className="space-y-2">
-                  <Label>Plataforma destino</Label>
-                  <Select value={platform} onValueChange={setPlatform}>
-                    <SelectTrigger className="h-11" data-testid="platform-select">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {platformOptions.map((opt) => (
-                        <SelectItem key={opt.value} value={opt.value}>
-                          <span className={opt.color}>{opt.label}</span>
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                {/* Platform Selection - Icon Buttons */}
+                <div className="space-y-3">
+                  <Label className="text-sm font-medium text-white/80">Plataforma</Label>
+                  <div className="grid grid-cols-3 gap-2">
+                    {[
+                      { value: 'tiktok', label: 'TikTok', color: 'from-pink-500 to-red-500' },
+                      { value: 'instagram', label: 'Reels', color: 'from-purple-500 to-pink-500' },
+                      { value: 'youtube_shorts', label: 'Shorts', color: 'from-red-500 to-orange-500' },
+                    ].map((p) => (
+                      <button
+                        key={p.value}
+                        type="button"
+                        onClick={() => setPlatform(p.value)}
+                        className={`p-3 rounded-xl text-center transition-all ${
+                          platform === p.value
+                            ? `bg-gradient-to-r ${p.color} shadow-lg`
+                            : 'bg-white/5 border border-white/10 hover:bg-white/10'
+                        }`}
+                      >
+                        <p className={`font-medium text-sm ${platform === p.value ? 'text-white' : 'text-white/70'}`}>
+                          {p.label}
+                        </p>
+                      </button>
+                    ))}
+                  </div>
                 </div>
 
-                {/* Quality */}
-                <div className="space-y-2">
-                  <Label>Calidad</Label>
-                  <Select value={quality} onValueChange={setQuality}>
-                    <SelectTrigger className="h-11" data-testid="quality-select">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {qualityOptions.map((opt) => (
-                        <SelectItem key={opt.value} value={opt.value}>
-                          {opt.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                {/* Background Mode */}
-                <div className="space-y-2">
-                  <Label>Modo de fondo</Label>
-                  <Select value={backgroundMode} onValueChange={setBackgroundMode}>
-                    <SelectTrigger className="h-11" data-testid="background-mode-select">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {backgroundModeOptions.map((opt) => (
-                        <SelectItem key={opt.value} value={opt.value}>
-                          {opt.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                {/* Quality & Background in a row */}
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-2">
+                    <Label className="text-sm text-white/80">Calidad</Label>
+                    <Select value={quality} onValueChange={setQuality}>
+                      <SelectTrigger className="h-10 bg-white/5 border-white/10 text-white" data-testid="quality-select">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {qualityOptions.map((opt) => (
+                          <SelectItem key={opt.value} value={opt.value}>
+                            {opt.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-sm text-white/80">Fondo</Label>
+                    <Select value={backgroundMode} onValueChange={setBackgroundMode}>
+                      <SelectTrigger className="h-10 bg-white/5 border-white/10 text-white" data-testid="background-mode-select">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {backgroundModeOptions.map((opt) => (
+                          <SelectItem key={opt.value} value={opt.value}>
+                            {opt.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
                 </div>
 
                 {/* Short Auto Duration */}
                 {processingMode === 'short_auto' && (
-                  <div className="space-y-3 p-4 rounded-lg bg-muted/50">
-                    <div className="flex justify-between">
-                      <Label>Duración del short</Label>
-                      <span className="text-sm font-medium text-purple-500">{shortAutoDuration}s</span>
+                  <div className="space-y-3 p-4 rounded-xl bg-gradient-to-r from-purple-500/10 to-pink-500/10 border border-purple-500/20">
+                    <div className="flex justify-between items-center">
+                      <Label className="text-white/80">Duración del short</Label>
+                      <span className="px-3 py-1 rounded-full bg-purple-500/30 text-purple-200 text-sm font-bold">
+                        {shortAutoDuration}s
+                      </span>
                     </div>
                     <Slider
                       value={[shortAutoDuration]}
@@ -594,45 +619,61 @@ export function VideoPage() {
                       className="py-2"
                       data-testid="short-duration-slider"
                     />
+                    <div className="flex justify-between text-xs text-white/40">
+                      <span>5s</span>
+                      <span>60s</span>
+                    </div>
                   </div>
                 )}
 
                 {/* Short Manual Options */}
                 {processingMode === 'short_manual' && (
-                  <div className="space-y-4 p-4 rounded-lg bg-muted/50">
-                    <div className="space-y-2">
-                      <Label>Tiempo de inicio (segundos)</Label>
-                      <Input
-                        type="number"
-                        value={shortStartTime}
-                        onChange={(e) => setShortStartTime(Number(e.target.value))}
-                        min={0}
-                        className="h-11"
-                        data-testid="short-start-time-input"
-                      />
+                  <div className="space-y-4 p-4 rounded-xl bg-gradient-to-r from-blue-500/10 to-cyan-500/10 border border-blue-500/20">
+                    <div className="flex items-center gap-2 text-blue-300">
+                      <Scissors className="h-4 w-4" />
+                      <span className="text-sm font-medium">Configurar corte</span>
                     </div>
-                    <div className="space-y-3">
-                      <div className="flex justify-between">
-                        <Label>Duración</Label>
-                        <span className="text-sm font-medium text-purple-500">{shortDuration}s</span>
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className="space-y-2">
+                        <Label className="text-xs text-white/60">Inicio (seg)</Label>
+                        <Input
+                          type="number"
+                          value={shortStartTime}
+                          onChange={(e) => setShortStartTime(Number(e.target.value))}
+                          min={0}
+                          className="h-10 bg-white/5 border-white/10 text-white text-center"
+                          data-testid="short-start-time-input"
+                        />
                       </div>
-                      <Slider
-                        value={[shortDuration]}
-                        onValueChange={([v]) => setShortDuration(v)}
-                        min={5}
-                        max={60}
-                        step={5}
-                        data-testid="short-manual-duration-slider"
-                      />
+                      <div className="space-y-2">
+                        <Label className="text-xs text-white/60">Duración</Label>
+                        <div className="h-10 px-3 rounded-md bg-white/5 border border-white/10 flex items-center justify-center">
+                          <span className="text-white font-medium">{shortDuration}s</span>
+                        </div>
+                      </div>
+                    </div>
+                    <Slider
+                      value={[shortDuration]}
+                      onValueChange={([v]) => setShortDuration(v)}
+                      min={5}
+                      max={60}
+                      step={5}
+                      data-testid="short-manual-duration-slider"
+                    />
+                    <div className="text-center text-xs text-white/40">
+                      Resultado: {formatDuration(shortStartTime)} → {formatDuration(shortStartTime + shortDuration)}
                     </div>
                   </div>
                 )}
 
                 {/* Advanced Options Toggle */}
-                <div className="flex items-center justify-between p-3 rounded-lg bg-muted/50">
+                <div 
+                  className="flex items-center justify-between p-3 rounded-xl bg-white/5 border border-white/10 cursor-pointer hover:bg-white/10 transition-all"
+                  onClick={() => setShowAdvanced(!showAdvanced)}
+                >
                   <div className="flex items-center gap-2">
-                    <Settings2 className="h-4 w-4 text-muted-foreground" />
-                    <Label className="cursor-pointer">Opciones avanzadas</Label>
+                    <Settings2 className="h-4 w-4 text-white/60" />
+                    <Label className="cursor-pointer text-white/80">Opciones avanzadas</Label>
                   </div>
                   <Switch
                     checked={showAdvanced}
@@ -643,11 +684,11 @@ export function VideoPage() {
 
                 {/* Advanced Options */}
                 {showAdvanced && (
-                  <div className="space-y-4 p-4 rounded-lg border border-dashed">
+                  <div className="space-y-4 p-4 rounded-xl bg-white/5 border border-dashed border-white/20">
                     <div className="space-y-3">
-                      <div className="flex justify-between">
-                        <Label>Espacio superior</Label>
-                        <span className="text-sm">{(headroomRatio * 100).toFixed(0)}%</span>
+                      <div className="flex justify-between items-center">
+                        <Label className="text-white/70 text-sm">Espacio superior (headroom)</Label>
+                        <span className="text-xs text-white/50 bg-white/10 px-2 py-1 rounded">{(headroomRatio * 100).toFixed(0)}%</span>
                       </div>
                       <Slider
                         value={[headroomRatio]}
@@ -658,9 +699,9 @@ export function VideoPage() {
                       />
                     </div>
                     <div className="space-y-3">
-                      <div className="flex justify-between">
-                        <Label>Suavizado de cámara</Label>
-                        <span className="text-sm">{(smoothingStrength * 100).toFixed(0)}%</span>
+                      <div className="flex justify-between items-center">
+                        <Label className="text-white/70 text-sm">Suavizado de cámara</Label>
+                        <span className="text-xs text-white/50 bg-white/10 px-2 py-1 rounded">{(smoothingStrength * 100).toFixed(0)}%</span>
                       </div>
                       <Slider
                         value={[smoothingStrength]}
@@ -675,7 +716,7 @@ export function VideoPage() {
 
                 {/* Process Button */}
                 <Button
-                  className="w-full h-12 bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 shadow-lg shadow-purple-500/25 hover:shadow-purple-500/40 transition-all text-base font-medium"
+                  className="w-full h-14 bg-gradient-to-r from-purple-600 via-pink-500 to-orange-400 hover:from-purple-700 hover:via-pink-600 hover:to-orange-500 shadow-xl shadow-purple-500/30 hover:shadow-purple-500/50 transition-all text-base font-semibold text-white border-0 rounded-xl"
                   onClick={handleProcess}
                   disabled={processMutation.isPending}
                   data-testid="process-video-button"
@@ -687,6 +728,11 @@ export function VideoPage() {
                   )}
                   Convertir a vertical
                 </Button>
+
+                {/* Quick info */}
+                <p className="text-center text-xs text-white/30">
+                  El procesamiento puede tardar unos minutos dependiendo de la duración
+                </p>
               </CardContent>
             </Card>
           </div>
