@@ -11,7 +11,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Skeleton } from '@/components/ui/skeleton';
 import { toast } from 'sonner';
-import { Plus, Folder, Film, MoreVertical, Pencil, Trash2, Loader2, Sparkles, ArrowRight, FolderOpen } from 'lucide-react';
+import { Plus, Folder, MoreVertical, Pencil, Trash2, Loader2, Sparkles, ArrowRight, FolderOpen } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -186,16 +186,10 @@ export function DashboardPage() {
 
         {/* Stats */}
         {projects.length > 0 && (
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-4">
             <div className="stat-card rounded-xl p-5">
               <p className="text-3xl font-bold font-outfit text-foreground">{projects.length}</p>
               <p className="text-sm text-muted-foreground mt-1">Proyectos</p>
-            </div>
-            <div className="stat-card rounded-xl p-5">
-              <p className="text-3xl font-bold font-outfit text-foreground">
-                {projects.reduce((acc, p) => acc + (p.videoCount || 0), 0)}
-              </p>
-              <p className="text-sm text-muted-foreground mt-1">Videos totales</p>
             </div>
             <div className="stat-card rounded-xl p-5">
               <p className="text-3xl font-bold font-outfit gradient-text">∞</p>
@@ -328,14 +322,6 @@ export function DashboardPage() {
                       </CardDescription>
                     )}
                   </CardHeader>
-                  <CardContent className="pt-0">
-                    <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                      <div className="flex items-center gap-1.5">
-                        <Film className="h-4 w-4" />
-                        <span>{project.videoCount || 0} videos</span>
-                      </div>
-                    </div>
-                  </CardContent>
                 </Card>
               </Link>
             ))}

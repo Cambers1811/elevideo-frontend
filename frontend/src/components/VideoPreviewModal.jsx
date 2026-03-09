@@ -4,10 +4,10 @@ import { Badge } from '@/components/ui/badge';
 import { X, Download, Smartphone, Maximize2 } from 'lucide-react';
 
 export function VideoPreviewModal({ isOpen, onClose, video, rendition }) {
-  const videoUrl = rendition?.outputUrl || rendition?.previewUrl || video?.secureUrl;
+  const videoSrc = rendition?.outputUrl || rendition?.previewUrl || video?.videoUrl;
   const title = rendition ? `${video?.title} - ${rendition.platform}` : video?.title;
 
-  if (!videoUrl) return null;
+  if (!videoSrc) return null;
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -56,7 +56,7 @@ export function VideoPreviewModal({ isOpen, onClose, video, rendition }) {
             // Vertical video (9:16)
             <div className="relative h-[70vh] max-h-[600px] aspect-[9/16] mx-auto">
               <video
-                src={videoUrl}
+                src={videoSrc}
                 controls
                 autoPlay
                 className="w-full h-full object-contain rounded-lg"
@@ -70,7 +70,7 @@ export function VideoPreviewModal({ isOpen, onClose, video, rendition }) {
           ) : (
             // Horizontal video (16:9)
             <video
-              src={videoUrl}
+              src={videoSrc}
               controls
               autoPlay
               className="w-full max-h-[70vh] object-contain"

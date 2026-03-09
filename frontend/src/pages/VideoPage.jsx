@@ -239,10 +239,10 @@ export function VideoPage() {
             {/* Video Player */}
             {videoLoading ? (
               <Skeleton className="aspect-video w-full rounded-2xl" />
-            ) : video?.secureUrl ? (
+            ) : video?.videoUrl ? (
               <div className="relative aspect-video bg-black rounded-2xl overflow-hidden shadow-2xl">
                 <video
-                  src={video.secureUrl}
+                  src={video.videoUrl}
                   controls
                   className="w-full h-full"
                   data-testid="video-player"

@@ -26,10 +26,14 @@ apiClient.interceptors.request.use(
 apiClient.interceptors.response.use(
   (response) => response,
   (error) => {
+    // Solo redirigir al login si el error es 401 Y no es una petición de login/register
     if (error.response?.status === 401) {
-      localStorage.removeItem('elevideo_token');
-      localStorage.removeItem('elevideo_user');
-      window.location.href = '/login';
+      const isAuthRequest = error.config?.url?.includes('/auth/');
+      if (!isAuthRequest) {
+        localStorage.removeItem('elevideo_token');
+        localStorage.removeItem('elevideo_user');
+        window.location.href = '/login';
+      }
     }
     return Promise.reject(error);
   }

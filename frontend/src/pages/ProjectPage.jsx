@@ -385,7 +385,7 @@ export function ProjectPage() {
                 >
                   {/* Thumbnail */}
                   <div className="relative aspect-video bg-gradient-to-br from-slate-800 to-slate-900 overflow-hidden">
-                    {video.thumbnailUrl || video.secureUrl ? (
+                    {video.thumbnailUrl || video.videoUrl ? (
                       <>
                         {video.thumbnailUrl ? (
                           <img
@@ -395,7 +395,7 @@ export function ProjectPage() {
                           />
                         ) : (
                           <video
-                            src={video.secureUrl}
+                            src={video.videoUrl}
                             className="w-full h-full object-cover"
                             muted
                             preload="metadata"
