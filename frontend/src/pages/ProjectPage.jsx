@@ -69,12 +69,12 @@ const statusConfig = {
   },
 };
 
-function formatDuration(ms) {
-  if (!ms) return '--:--';
-  const totalSeconds = Math.floor(ms / 1000);
+function formatDuration(seconds) {
+  if (!seconds) return '--:--';
+  const totalSeconds = Math.floor(seconds);
   const minutes = Math.floor(totalSeconds / 60);
-  const seconds = totalSeconds % 60;
-  return `${minutes}:${seconds.toString().padStart(2, '0')}`;
+  const secs = totalSeconds % 60;
+  return `${minutes}:${secs.toString().padStart(2, '0')}`;
 }
 
 function formatFileSize(bytes) {
@@ -427,9 +427,9 @@ export function ProjectPage() {
                     </div>
 
                     {/* Duration badge */}
-                    {video.durationInMillis && (
+                    {video.durationInSeconds && (
                       <div className="absolute bottom-2 right-2 px-2 py-1 rounded-md bg-black/70 text-white text-xs font-medium backdrop-blur-sm">
-                        {formatDuration(video.durationInMillis)}
+                        {formatDuration(video.durationInSeconds)}
                       </div>
                     )}
 

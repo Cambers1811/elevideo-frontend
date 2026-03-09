@@ -73,12 +73,12 @@ const jobStatusConfig = {
   cancelled: { label: 'Cancelado', icon: XCircle, className: 'bg-gray-500/10 text-gray-600 border-gray-500/20' },
 };
 
-function formatDuration(ms) {
-  if (!ms) return '--:--';
-  const totalSeconds = Math.floor(ms / 1000);
+function formatDuration(seconds) {
+  if (!seconds) return '--:--';
+  const totalSeconds = Math.floor(seconds);
   const minutes = Math.floor(totalSeconds / 60);
-  const seconds = totalSeconds % 60;
-  return `${minutes}:${seconds.toString().padStart(2, '0')}`;
+  const secs = totalSeconds % 60;
+  return `${minutes}:${secs.toString().padStart(2, '0')}`;
 }
 
 export function VideoPage() {
@@ -259,7 +259,7 @@ export function VideoPage() {
             {video && (
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
                 {[
-                  { label: 'Duración', value: formatDuration(video.durationInMillis) },
+                  { label: 'Duración', value: formatDuration(video.durationInSeconds) },
                   { label: 'Resolución', value: `${video.width}×${video.height}` },
                   { label: 'Formato', value: (video.format || 'MP4').toUpperCase() },
                   { label: 'Estado', value: video.status, isStatus: true },
