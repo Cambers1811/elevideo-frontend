@@ -1,49 +1,105 @@
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { X, Download, Volume2, VolumeX } from 'lucide-react';
+import { X, Download, Clock, Scissors } from 'lucide-react';
 import { useState, useRef } from 'react';
+
+function formatTime(seconds) {
+  if (seconds === null || seconds === undefined) return '--:--';
+  const mins = Math.floor(seconds / 60);
+  const secs = Math.floor(seconds % 60);
+  return `${mins}:${secs.toString().padStart(2, '0')}`;
+}
 
 export function VideoPreviewModal({ isOpen, onClose, video, rendition }) {
   const videoSrc = rendition?.outputUrl || rendition?.previewUrl || video?.videoUrl;
-  const title = rendition ? `${video?.title} - ${rendition.platform}` : video?.title;
-  const isVertical = !!rendition; // Los renditions son verticales
-  const [isMuted, setIsMuted] = useState(false);
-  const videoRef = useRef(null);
+  const title = rendition ? `${video?.title}` : video?.title;
+  const isVertical = !!rendition;
 
   if (!videoSrc) return null;
 
-  const toggleMute = () => {
-    if (videoRef.current) {
-      videoRef.current.muted = !isMuted;
-      setIsMuted(!isMuted);
-    }
-  };
+  // Calcular tiempo de fin del segmento
+  const segmentStart = rendition?.segmentStart;
+  const segmentDuration = rendition?.segmentDuration;
+  const segmentEnd = (segmentStart !== undefined && segmentDuration) 
+    ? segmentStart + segmentDuration 
+    : null;
+
+  const isShort = rendition?.processingMode?.includes('short');
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className={`p-0 overflow-hidden border-0 bg-transparent shadow-none ${isVertical ? 'max-w-md' : 'max-w-4xl'}`}>
+      <DialogContent className={`p-0 overflow-hidden border-0 bg-transparent shadow-none ${isVertical ? 'max-w-sm' : 'max-w-4xl'}`}>
         {isVertical ? (
           /* Phone Frame para videos verticales */
-          <div className="relative flex items-center justify-center py-8">
+          <div className="relative flex flex-col items-center gap-4 py-4">
+            {/* Header con título y botón cerrar */}
+            <div className="flex items-center justify-between w-full px-2">
+              <div className="flex-1 min-w-0">
+                <h3 className="font-outfit font-semibold text-white text-lg truncate">
+                  {title}
+                </h3>
+                <div className="flex items-center gap-2 mt-1">
+                  <Badge className="bg-gradient-to-r from-pink-500 to-purple-500 text-white border-0 text-xs capitalize">
+                    {rendition?.platform}
+                  </Badge>
+                  <Badge variant="outline" className="border-white/30 text-white/80 text-xs">
+                    {rendition?.processingMode?.replace('_', ' ')}
+                  </Badge>
+                  <Badge variant="outline" className="border-white/30 text-white/80 text-xs capitalize">
+                    {rendition?.quality}
+                  </Badge>
+                </div>
+              </div>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={onClose}
+                className="text-white/70 hover:text-white hover:bg-white/10 rounded-full flex-shrink-0"
+              >
+                <X className="h-5 w-5" />
+              </Button>
+            </div>
+
+            {/* Info del segmento para shorts */}
+            {isShort && segmentStart !== undefined && (
+              <div className="flex items-center gap-3 px-4 py-2 rounded-full bg-white/10 backdrop-blur-sm">
+                <Scissors className="h-4 w-4 text-purple-400" />
+                <span className="text-white/90 text-sm">
+                  <span className="text-white/60">Inicio:</span> {formatTime(segmentStart)}
+                </span>
+                <span className="text-white/40">→</span>
+                <span className="text-white/90 text-sm">
+                  <span className="text-white/60">Fin:</span> {formatTime(segmentEnd)}
+                </span>
+                <span className="text-white/40">|</span>
+                <Clock className="h-4 w-4 text-blue-400" />
+                <span className="text-white/90 text-sm">
+                  {segmentDuration}s
+                </span>
+              </div>
+            )}
+
             {/* Phone device frame */}
             <div className="relative">
               {/* Phone outer frame */}
-              <div className="relative bg-gradient-to-b from-zinc-800 to-zinc-900 rounded-[3rem] p-2 shadow-2xl shadow-black/50">
+              <div className="relative bg-gradient-to-b from-zinc-700 via-zinc-800 to-zinc-900 rounded-[2.5rem] p-1.5 shadow-2xl shadow-black/60">
+                {/* Subtle shine effect */}
+                <div className="absolute inset-0 rounded-[2.5rem] bg-gradient-to-tr from-white/10 via-transparent to-transparent pointer-events-none" />
+                
                 {/* Phone inner bezel */}
-                <div className="relative bg-black rounded-[2.5rem] overflow-hidden">
-                  {/* Dynamic Island / Notch */}
-                  <div className="absolute top-0 left-0 right-0 z-20 flex justify-center pt-3">
-                    <div className="w-28 h-7 bg-black rounded-full flex items-center justify-center gap-2">
-                      <div className="w-2 h-2 rounded-full bg-zinc-800" />
-                      <div className="w-3 h-3 rounded-full bg-zinc-800 ring-1 ring-zinc-700" />
+                <div className="relative bg-black rounded-[2.2rem] overflow-hidden">
+                  {/* Small notch - más discreto */}
+                  <div className="absolute top-2 left-1/2 -translate-x-1/2 z-20">
+                    <div className="w-20 h-5 bg-black rounded-full flex items-center justify-center gap-2 border border-zinc-800/50">
+                      <div className="w-1.5 h-1.5 rounded-full bg-zinc-700" />
+                      <div className="w-2.5 h-2.5 rounded-full bg-zinc-800 ring-1 ring-zinc-700/50" />
                     </div>
                   </div>
 
                   {/* Video container */}
-                  <div className="relative w-72 h-[580px] bg-black">
+                  <div className="relative w-64 h-[520px] bg-black">
                     <video
-                      ref={videoRef}
                       src={videoSrc}
                       controls
                       autoPlay
@@ -51,76 +107,38 @@ export function VideoPreviewModal({ isOpen, onClose, video, rendition }) {
                       className="w-full h-full object-cover"
                       data-testid="video-preview-player"
                     />
-
-                    {/* Overlay header */}
-                    <div className="absolute top-0 left-0 right-0 z-10 p-4 pt-12 bg-gradient-to-b from-black/60 to-transparent pointer-events-none">
-                      <h3 className="font-outfit font-semibold text-white text-sm truncate">
-                        {title}
-                      </h3>
-                      <div className="flex items-center gap-2 mt-1">
-                        <Badge className="bg-white/20 text-white border-0 text-xs">
-                          {rendition?.platform}
-                        </Badge>
-                        <Badge variant="outline" className="border-white/30 text-white text-xs">
-                          {rendition?.processingMode}
-                        </Badge>
-                      </div>
-                    </div>
-
-                    {/* Bottom actions overlay */}
-                    <div className="absolute bottom-0 left-0 right-0 z-10 p-4 bg-gradient-to-t from-black/60 to-transparent">
-                      <div className="flex items-center justify-between">
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          className="text-white hover:bg-white/20"
-                          onClick={toggleMute}
-                        >
-                          {isMuted ? <VolumeX className="h-5 w-5" /> : <Volume2 className="h-5 w-5" />}
-                        </Button>
-                        {rendition?.outputUrl && (
-                          <Button
-                            asChild
-                            size="sm"
-                            className="bg-white text-black hover:bg-white/90"
-                          >
-                            <a href={rendition.outputUrl} download target="_blank" rel="noopener noreferrer">
-                              <Download className="h-4 w-4 mr-2" />
-                              Descargar
-                            </a>
-                          </Button>
-                        )}
-                      </div>
-                    </div>
                   </div>
 
                   {/* Home indicator */}
-                  <div className="absolute bottom-2 left-0 right-0 flex justify-center">
-                    <div className="w-32 h-1 bg-white/30 rounded-full" />
+                  <div className="absolute bottom-1.5 left-0 right-0 flex justify-center pointer-events-none">
+                    <div className="w-28 h-1 bg-white/20 rounded-full" />
                   </div>
                 </div>
               </div>
 
-              {/* Phone side buttons */}
-              <div className="absolute -left-1 top-28 w-1 h-8 bg-zinc-700 rounded-l-sm" />
-              <div className="absolute -left-1 top-44 w-1 h-16 bg-zinc-700 rounded-l-sm" />
-              <div className="absolute -left-1 top-64 w-1 h-16 bg-zinc-700 rounded-l-sm" />
-              <div className="absolute -right-1 top-36 w-1 h-20 bg-zinc-700 rounded-r-sm" />
-
-              {/* Close button */}
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={onClose}
-                className="absolute -top-2 -right-2 bg-white/10 hover:bg-white/20 text-white rounded-full backdrop-blur-sm"
-              >
-                <X className="h-5 w-5" />
-              </Button>
+              {/* Phone side buttons - más sutiles */}
+              <div className="absolute -left-0.5 top-24 w-0.5 h-6 bg-zinc-600 rounded-l-sm" />
+              <div className="absolute -left-0.5 top-36 w-0.5 h-12 bg-zinc-600 rounded-l-sm" />
+              <div className="absolute -left-0.5 top-52 w-0.5 h-12 bg-zinc-600 rounded-l-sm" />
+              <div className="absolute -right-0.5 top-32 w-0.5 h-16 bg-zinc-600 rounded-r-sm" />
             </div>
 
-            {/* Platform indicator */}
-            <div className="absolute bottom-2 left-1/2 -translate-x-1/2 text-xs text-white/50">
-              Vista previa para {rendition?.platform}
+            {/* Botón de descarga estilizado - fuera del video */}
+            {rendition?.outputUrl && (
+              <Button
+                asChild
+                className="w-64 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 hover:from-indigo-600 hover:via-purple-600 hover:to-pink-600 text-white border-0 shadow-lg shadow-purple-500/30 hover:shadow-purple-500/50 transition-all"
+              >
+                <a href={rendition.outputUrl} download target="_blank" rel="noopener noreferrer">
+                  <Download className="h-4 w-4 mr-2" />
+                  Descargar para {rendition?.platform}
+                </a>
+              </Button>
+            )}
+
+            {/* Info adicional */}
+            <div className="text-xs text-white/40 text-center">
+              Fondo: {rendition?.backgroundMode?.replace('_', ' ')} • Creado: {new Date(rendition?.createdAt).toLocaleDateString()}
             </div>
           </div>
         ) : (
@@ -147,7 +165,6 @@ export function VideoPreviewModal({ isOpen, onClose, video, rendition }) {
 
             {/* Video */}
             <video
-              ref={videoRef}
               src={videoSrc}
               controls
               autoPlay
