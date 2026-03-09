@@ -66,7 +66,7 @@ export function ProfilePage() {
   });
 
   const changePasswordMutation = useMutation({
-    mutationFn: (data) => usersApi.changePassword(user.id, data),
+    mutationFn: (data) => usersApi.changePassword(data),
     onSuccess: () => {
       toast.success('Contraseña actualizada');
       passwordForm.reset();

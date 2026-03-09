@@ -110,14 +110,14 @@ export function VideoPage() {
   });
 
   const { data: jobsData, isLoading: jobsLoading } = useQuery({
-    queryKey: ['jobs', videoId],
-    queryFn: () => processingApi.getJobs(videoId, { page: 0, size: 20 }),
+    queryKey: ['jobs', projectId, videoId],
+    queryFn: () => processingApi.getJobs(projectId, videoId, { page: 0, size: 20 }),
     refetchInterval: 5000,
   });
 
   const { data: renditionsData, isLoading: renditionsLoading, refetch: refetchRenditions } = useQuery({
-    queryKey: ['renditions', videoId],
-    queryFn: () => processingApi.getRenditions(videoId, { page: 0, size: 20 }),
+    queryKey: ['renditions', projectId, videoId],
+    queryFn: () => processingApi.getRenditions(projectId, videoId, { page: 0, size: 20 }),
   });
 
   // Check for completed jobs and notify
@@ -146,9 +146,9 @@ export function VideoPage() {
   }, []);
 
   const processMutation = useMutation({
-    mutationFn: (data) => processingApi.processVideo(videoId, data),
+    mutationFn: (data) => processingApi.createJob(projectId, videoId, data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['jobs', videoId] });
+      queryClient.invalidateQueries({ queryKey: ['jobs', projectId, videoId] });
       toast.success('¡Procesamiento iniciado! Te notificaremos cuando termine.');
     },
     onError: (error) => {
@@ -157,9 +157,9 @@ export function VideoPage() {
   });
 
   const cancelJobMutation = useMutation({
-    mutationFn: (jobId) => processingApi.cancelJob(videoId, jobId),
+    mutationFn: (jobId) => processingApi.cancelJob(projectId, videoId, jobId),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['jobs', videoId] });
+      queryClient.invalidateQueries({ queryKey: ['jobs', projectId, videoId] });
       toast.success('Job cancelado');
     },
     onError: (error) => {
@@ -168,9 +168,9 @@ export function VideoPage() {
   });
 
   const deleteRenditionMutation = useMutation({
-    mutationFn: (renditionId) => processingApi.deleteRendition(videoId, renditionId),
+    mutationFn: (renditionId) => processingApi.deleteRendition(projectId, videoId, renditionId),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['renditions', videoId] });
+      queryClient.invalidateQueries({ queryKey: ['renditions', projectId, videoId] });
       setIsDeleteRenditionOpen(false);
       toast.success('Rendición eliminada');
     },

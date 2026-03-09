@@ -1,6 +1,7 @@
 import axios from 'axios';
 
-const API_BASE_URL = 'https://elevideo.onrender.com';
+// Nueva URL del backend
+const API_BASE_URL = 'https://elevideo-ec.onrender.com';
 
 const apiClient = axios.create({
   baseURL: API_BASE_URL,

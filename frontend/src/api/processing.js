@@ -1,42 +1,70 @@
 import apiClient from './client';
 
 export const processingApi = {
-  processVideo: async (videoId, processData) => {
-    const response = await apiClient.post(`/api/v1/videos/${videoId}/process`, processData);
+  // POST /api/v1/projects/{projectId}/videos/{videoId}/jobs - Iniciar job de procesamiento
+  createJob: async (projectId, videoId, processData) => {
+    const response = await apiClient.post(
+      `/api/v1/projects/${projectId}/videos/${videoId}/jobs`,
+      processData
+    );
     return response.data;
   },
 
-  getJobs: async (videoId, params = {}) => {
-    const response = await apiClient.get(`/api/v1/videos/${videoId}/jobs`, { params });
+  // GET /api/v1/projects/{projectId}/videos/{videoId}/jobs - Listar jobs del video
+  getJobs: async (projectId, videoId, params = {}) => {
+    const response = await apiClient.get(
+      `/api/v1/projects/${projectId}/videos/${videoId}/jobs`,
+      { params }
+    );
     return response.data;
   },
 
-  getJobStatus: async (videoId, jobId) => {
-    const response = await apiClient.get(`/api/v1/videos/${videoId}/jobs/${jobId}`);
+  // GET /api/v1/projects/{projectId}/videos/{videoId}/jobs/{jobId} - Obtener estado de un job
+  getJobStatus: async (projectId, videoId, jobId) => {
+    const response = await apiClient.get(
+      `/api/v1/projects/${projectId}/videos/${videoId}/jobs/${jobId}`
+    );
     return response.data;
   },
 
-  cancelJob: async (videoId, jobId) => {
-    const response = await apiClient.post(`/api/v1/videos/${videoId}/jobs/${jobId}/cancel`);
+  // GET /api/v1/projects/{projectId}/videos/{videoId}/jobs/overview - Resumen de jobs
+  getJobsOverview: async (projectId, videoId) => {
+    const response = await apiClient.get(
+      `/api/v1/projects/${projectId}/videos/${videoId}/jobs/overview`
+    );
     return response.data;
   },
 
-  getRenditions: async (videoId, params = {}) => {
-    const response = await apiClient.get(`/api/v1/videos/${videoId}/rendition`, { params });
+  // POST /api/v1/projects/{projectId}/videos/{videoId}/jobs/{jobId}/cancel - Cancelar job
+  cancelJob: async (projectId, videoId, jobId) => {
+    const response = await apiClient.post(
+      `/api/v1/projects/${projectId}/videos/${videoId}/jobs/${jobId}/cancel`
+    );
     return response.data;
   },
 
-  getRenditionById: async (videoId, renditionId) => {
-    const response = await apiClient.get(`/api/v1/videos/${videoId}/rendition/${renditionId}`, {
-      params: { renditionId },
-    });
+  // GET /api/v1/projects/{projectId}/videos/{videoId}/renditions - Listar renditions del video
+  getRenditions: async (projectId, videoId, params = {}) => {
+    const response = await apiClient.get(
+      `/api/v1/projects/${projectId}/videos/${videoId}/renditions`,
+      { params }
+    );
     return response.data;
   },
 
-  deleteRendition: async (videoId, renditionId) => {
-    const response = await apiClient.delete(`/api/v1/videos/${videoId}/rendition/${renditionId}`, {
-      params: { renditionId },
-    });
+  // GET /api/v1/projects/{projectId}/videos/{videoId}/renditions/{renditionId} - Obtener rendition por ID
+  getRenditionById: async (projectId, videoId, renditionId) => {
+    const response = await apiClient.get(
+      `/api/v1/projects/${projectId}/videos/${videoId}/renditions/${renditionId}`
+    );
+    return response.data;
+  },
+
+  // DELETE /api/v1/projects/{projectId}/videos/{videoId}/renditions/{renditionId} - Eliminar rendition
+  deleteRendition: async (projectId, videoId, renditionId) => {
+    const response = await apiClient.delete(
+      `/api/v1/projects/${projectId}/videos/${videoId}/renditions/${renditionId}`
+    );
     return response.data;
   },
 };
